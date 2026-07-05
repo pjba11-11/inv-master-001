@@ -1,24 +1,3 @@
--- ============================================
--- ENUMS (SAFE FOR FLYWAY RE-RUNS)
--- ============================================
-
-DO $$ BEGIN
-CREATE TYPE user_role AS ENUM ('ADMIN', 'MANAGER', 'SALES');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
-CREATE TYPE invoice_status AS ENUM (
-        'GENERATED',
-        'PARTIALLY_PAID',
-        'PAID',
-        'CANCELLED'
-    );
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
 
 -- ============================================
 -- COMPANIES
@@ -50,7 +29,7 @@ CREATE TABLE users (
                        name VARCHAR(100) NOT NULL,
                        email VARCHAR(255) UNIQUE NOT NULL,
                        password VARCHAR(255) NOT NULL,
-                       role user_role NOT NULL,
+                       role  VARCHAR(20),
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        deleted_at TIMESTAMP
@@ -188,7 +167,7 @@ CREATE TABLE invoices (
                           gst DECIMAL(12,2) DEFAULT 0,
                           discount DECIMAL(12,2) DEFAULT 0,
                           grand_total DECIMAL(12,2) DEFAULT 0,
-                          status invoice_status DEFAULT 'GENERATED',
+                          status VARCHAR(30) DEFAULT 'GENERATED',
                           remarks TEXT,
                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
