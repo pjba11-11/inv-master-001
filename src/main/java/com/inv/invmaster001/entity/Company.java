@@ -1,81 +1,121 @@
 package com.inv.invmaster001.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import lombok.*;
 
 /**
  * Company entity mapped from the companies table.
  */
 @Entity
 @Table(name = "companies")
-@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Company {
 
-    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
+    @Builder.Default
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<User> users = new ArrayList<>();
 
-    @Column(name = "company_name", length = 150, nullable = false)
+    @OneToOne(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Settings settings;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Product> products = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Invoice> invoices = new ArrayList<>();
+
+    // =========================
+    // FIELDS
+    // =========================
+
+    @Column(nullable = false, length = 150)
     private String companyName;
 
-    @Column(name = "gst_number", length = 30)
     private String gstNumber;
-
-    @Column(name = "phone", length = 20)
     private String phone;
-
-    @Column(name = "email", length = 255)
     private String email;
 
-    @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
-    @Column(name = "bank_name", length = 100)
     private String bankName;
-
-    @Column(name = "account_number", length = 50)
     private String accountNumber;
-
-    @Column(name = "ifsc", length = 20)
     private String ifsc;
-
-    @Column(name = "upi_id", length = 50)
     private String upiId;
 
-    @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
 
-    //  helper methods to keep both sides in sync
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+
     public void addUser(User user) {
         users.add(user);
         user.setCompany(this);
     }
 
-    public void removeUser(User user) {
-        users.remove(user);
-        user.setCompany(null);
+    public void addProduct(Product product) {
+        products.add(product);
+        product.setCompany(this);
+    }
+
+    public void addInvoice(Invoice invoice) {
+        invoices.add(invoice);
+        invoice.setCompany(this);
+    }
+
+    public void setSettings(Settings settings) {
+
+        if (this.settings != null) {
+            this.settings.setCompany(null);
+        }
+
+        this.settings = settings;
+
+        if (settings != null) {
+            settings.setCompany(this);
+        }
     }
 }

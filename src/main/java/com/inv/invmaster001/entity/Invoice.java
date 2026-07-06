@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import lombok.*;
 
@@ -11,21 +13,19 @@ import lombok.*;
  * Invoice entity mapped from the invoices table.
  */
 @Entity
-@Table(name = "invoices", uniqueConstraints = @UniqueConstraint(columnNames = "invoice_number"))
-@Builder
+@Table(name = "invoices")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Invoice {
 
-    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "invoice_number", length = 50, nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String invoiceNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -36,33 +36,32 @@ public class Invoice {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-    @Column(name = "invoice_date", nullable = false)
+    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InvoiceLineItem> invoiceLineItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Payment> payments = new ArrayList<>();
+
     private LocalDate invoiceDate;
 
-    @Column(name = "subtotal", precision = 12, scale = 2, nullable = false)
     private BigDecimal subtotal;
-
-    @Column(name = "gst", precision = 12, scale = 2, nullable = false)
     private BigDecimal gst;
-
-    @Column(name = "discount", precision = 12, scale = 2, nullable = false)
     private BigDecimal discount;
-
-    @Column(name = "grand_total", precision = 12, scale = 2, nullable = false)
     private BigDecimal grandTotal;
 
-    @Column(name = "status", length = 30)
     private String status;
-
-    @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    public void addLineItem(InvoiceLineItem item) {
+        invoiceLineItems.add(item);
+        item.setInvoice(this);
+    }
+
+    public void addPayment(Payment payment) {
+        payments.add(payment);
+        payment.setInvoice(this);
+    }
 }

@@ -6,9 +6,4 @@ import com.inv.invmaster001.entity.Material;
 
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long> {
-    // Find by product
-    java.util.List<Material> findByProductId(Long productId);
-
-    // Find by active status
-    java.util.List<Material> findByActive(Boolean active);
 }

@@ -3,6 +3,8 @@ package com.inv.invmaster001.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import lombok.*;
 
@@ -28,6 +30,9 @@ public class Material {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MaterialPriceHistory> priceHistory = new ArrayList<>();
+
     @Column(name = "material_name", length = 100, nullable = false)
     private String materialName;
 
@@ -48,4 +53,15 @@ public class Material {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    // helper methods to keep both sides in sync
+    public void addPriceHistory(MaterialPriceHistory history) {
+        priceHistory.add(history);
+        history.setMaterial(this);
+    }
+
+    public void removePriceHistory(MaterialPriceHistory history) {
+        priceHistory.remove(history);
+        history.setMaterial(null);
+    }
 }
