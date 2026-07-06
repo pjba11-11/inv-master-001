@@ -2,7 +2,7 @@ package com.inv.invmaster001.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,21 +11,24 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "users")
-public class User {
+@Table(name = "materials")
+public class Material {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String email;
-    private String password;
-    private String role;
-
     @ManyToOne
     @JoinColumn(name = "company_id")
     private Company company;
+
+    @Column(name = "material_name")
+    private String materialName;
+
+    private String unit;
+    @Column(name = "current_price", precision = 12, scale = 2)
+    private BigDecimal currentPrice;
+    private Boolean active;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -35,4 +38,7 @@ public class User {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    // One-to-many to MaterialPriceHistory
+    // (mappedBy in child)
 }

@@ -160,7 +160,6 @@ CREATE TABLE invoices (
                           id BIGSERIAL PRIMARY KEY,
                           invoice_number VARCHAR(50) UNIQUE NOT NULL,
                           company_id BIGINT NOT NULL REFERENCES companies(id),
-                          customer_id BIGINT NOT NULL REFERENCES customers(id),
                           created_by BIGINT NOT NULL REFERENCES users(id),
                           invoice_date DATE NOT NULL,
                           subtotal DECIMAL(12,2) DEFAULT 0,

@@ -11,21 +11,26 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "users")
-public class User {
+@Table(name = "customers")
+public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String email;
-    private String password;
-    private String role;
 
-    @ManyToOne
-    @JoinColumn(name = "company_id")
-    private Company company;
+    @Column(name = "customer_name")
+    private String customerName;
+
+    private String phone;
+    private String email;
+    private String gstNumber;
+
+    @Column(name = "billing_address")
+    private String billingAddress;
+
+    @Column(name = "shipping_address")
+    private String shippingAddress;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
