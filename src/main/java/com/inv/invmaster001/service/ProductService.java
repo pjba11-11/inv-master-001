@@ -1,6 +1,5 @@
 package com.inv.invmaster001.service;
 
-
 import com.inv.invmaster001.dto.request.product.CreateProductRequest;
 import com.inv.invmaster001.dto.request.product.MaterialRequest;
 import com.inv.invmaster001.dto.request.product.UpdateProductRequest;
@@ -24,10 +23,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -41,28 +37,56 @@ public class ProductService {
     private final CompanyRepository companyRepository;
 
 
+
+    // =========================================================
+    // GET ALL PRODUCTS
+    // =========================================================
+
     public List<ProductFullResponse> getAllProducts(Long companyId) {
 
-        List<Product> products = productRepository.findByCompanyId(companyId);
-
-        return products.stream()
+        return productRepository.findByCompanyId(companyId)
+                .stream()
                 .map(this::mapToFullResponse)
                 .toList();
+
     }
+
 
 
     // =========================================================
     // CREATE PRODUCT
     // =========================================================
+
     public ProductResponse createProduct(
             CreateProductRequest request,
             Long companyId) {
 
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() ->
-                        new CompanyNotFoundException(
-                                "Company not found"
-                        ));
+
+        Company company =
+                companyRepository.findById(companyId)
+                        .orElseThrow(() ->
+                                new CompanyNotFoundException(
+                                        "Company not found"
+                                ));
+
+
+
+        boolean productExists =
+                productRepository
+                        .existsByCompanyIdAndProductNameIgnoreCase(
+                                companyId,
+                                request.getProductName()
+                        );
+
+
+        if(productExists){
+
+            throw new RuntimeException(
+                    "Product already exists"
+            );
+
+        }
+
 
 
         Product product = new Product();
@@ -73,108 +97,191 @@ public class ProductService {
         product.setActive(true);
 
 
+
         addNewProductPriceVersion(
-                product, request.getManufacturingCost(), request.getSellingPrice());
+                product,
+                request.getManufacturingCost(),
+                request.getSellingPrice()
+        );
 
 
-        for (MaterialRequest req : request.getMaterials()) {
 
-            Material material = new Material();
+        if(request.getMaterials()!=null){
 
-            material.setMaterialName(req.getMaterialName());
-            material.setHsnCode(req.getHsnCode());
-            material.setUnit(req.getUnit());
-            material.setCurrentPrice(req.getCurrentPrice());
-            material.setActive(true);
+            for(MaterialRequest req : request.getMaterials()){
 
-            addNewMaterialPriceVersion(material, req.getCurrentPrice());
-            product.addMaterial(material);
+
+                Material material = new Material();
+
+                material.setMaterialName(req.getMaterialName());
+                material.setHsnCode(req.getHsnCode());
+                material.setUnit(req.getUnit());
+                material.setCurrentPrice(req.getCurrentPrice());
+                material.setActive(true);
+
+
+
+                product.addMaterial(material);
+
+
+
+                addNewMaterialPriceVersion(
+                        material,
+                        req.getCurrentPrice()
+                );
+
+            }
+
         }
 
-        Product saved = productRepository.save(product);
+
+
+        Product saved =
+                productRepository.save(product);
+
+
 
         return ProductResponse.builder()
                 .id(saved.getId())
                 .message("Product created successfully")
                 .build();
-    }
 
+    }
     // =========================================================
     // UPDATE PRODUCT
     // =========================================================
-    public ProductResponse updateProduct(Long productId, UpdateProductRequest request,
+    public ProductResponse updateProduct(
+            Long productId,
+            UpdateProductRequest request,
             Long companyId) {
 
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() ->
-                        new ProductNotFoundException(
-                                "Product not found"
-                        ));
+        Product product =
+                productRepository.findById(productId)
+                        .orElseThrow(() ->
+                                new ProductNotFoundException(
+                                        "Product not found"
+                                ));
 
 
-        if (!product.getCompany()
+
+        if(!product.getCompany()
                 .getId()
-                .equals(companyId)) {
+                .equals(companyId)){
 
             throw new RuntimeException(
                     "You cannot access this product"
             );
+
         }
 
 
-        product.setProductName(request.getProductName());
-        product.setDescription(request.getDescription());
-        product.setActive(request.getActive());
+        product.setProductName(
+                request.getProductName()
+        );
 
 
-        if (request.getManufacturingCost() != null &&
-                request.getSellingPrice() != null) {
+        product.setDescription(
+                request.getDescription()
+        );
 
 
-            addNewProductPriceVersion(
-                    product, request.getManufacturingCost(), request.getSellingPrice()
-            );
+        product.setActive(
+                request.getActive()
+        );
+
+
+
+        if(request.getManufacturingCost()!=null
+                &&
+                request.getSellingPrice()!=null){
+
+
+            ProductPriceHistory latestPrice =
+                    product.getPriceHistory()
+                            .stream()
+                            .filter(history ->
+                                    history.getEffectiveTo()==null)
+                            .findFirst()
+                            .orElse(null);
+
+
+
+            boolean priceChanged =
+                    latestPrice==null
+                            ||
+                            latestPrice.getManufacturingCost()
+                                    .compareTo(request.getManufacturingCost()) != 0
+                            ||
+                            latestPrice.getSellingPrice()
+                                    .compareTo(request.getSellingPrice()) != 0;
+
+
+
+            if(priceChanged){
+
+                addNewProductPriceVersion(
+                        product,
+                        request.getManufacturingCost(),
+                        request.getSellingPrice()
+                );
+
+            }
+
         }
 
 
-        syncMaterials(product, request.getMaterials());
+
+        syncMaterials(
+                product,
+                request.getMaterials()
+        );
+
 
 
         productRepository.save(product);
+
 
 
         return ProductResponse.builder()
                 .id(product.getId())
                 .message("Product updated successfully")
                 .build();
+
     }
     // =========================================================
-    // DELETE PRODUCT (SOFT DELETE)
+    // DELETE PRODUCT
     // =========================================================
 
     public void deleteProduct(
             Long productId,
-            Long companyId) {
+            Long companyId){
 
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() ->
-                        new ProductNotFoundException("Product not found"));
+        Product product =
+                productRepository.findById(productId)
+                        .orElseThrow(() ->
+                                new ProductNotFoundException(
+                                        "Product not found"
+                                ));
 
 
-        if (!product.getCompany()
+
+        if(!product.getCompany()
                 .getId()
-                .equals(companyId)) {
+                .equals(companyId)){
 
             throw new RuntimeException(
                     "You cannot access this product"
             );
+
         }
+
 
 
         product.setActive(false);
         product.setDeletedAt(LocalDateTime.now());
+
 
 
         product.getMaterials()
@@ -186,43 +293,49 @@ public class ProductService {
                 });
 
 
+
         productRepository.save(product);
+
     }
+
+
+
+
     // =========================================================
-    // PRODUCT PRICE VERSIONING
+    // PRODUCT PRICE HISTORY
     // =========================================================
 
     private void addNewProductPriceVersion(
             Product product,
             BigDecimal manufacturingCost,
-            BigDecimal sellingPrice) {
+            BigDecimal sellingPrice){
 
 
 
-        product.getPriceHistory().stream()
-                .filter(h -> h.getEffectiveTo() == null)
+        product.getPriceHistory()
+                .stream()
+                .filter(history ->
+                        history.getEffectiveTo()==null)
                 .findFirst()
-                .ifPresent(h ->
-                        h.setEffectiveTo(LocalDate.now()));
+                .ifPresent(history ->
+                        history.setEffectiveTo(LocalDate.now()));
 
 
 
-        ProductPriceHistory history = new ProductPriceHistory();
-
-        history.setProduct(product);
-        history.setManufacturingCost(manufacturingCost);
-        history.setSellingPrice(sellingPrice);
-
-        history.setProfitMargin(
-                calculateProfitMargin(
-                        manufacturingCost,
-                        sellingPrice
-                )
-        );
-
-
-        history.setEffectiveFrom(LocalDate.now());
-        history.setEffectiveTo(null);
+        ProductPriceHistory history =
+                ProductPriceHistory.builder()
+                        .product(product)
+                        .manufacturingCost(manufacturingCost)
+                        .sellingPrice(sellingPrice)
+                        .profitMargin(
+                                calculateProfitMargin(
+                                        manufacturingCost,
+                                        sellingPrice
+                                )
+                        )
+                        .effectiveFrom(LocalDate.now())
+                        .effectiveTo(null)
+                        .build();
 
 
 
@@ -240,22 +353,23 @@ public class ProductService {
 
     private void syncMaterials(
             Product product,
-            List<MaterialRequest> requests) {
+            List<MaterialRequest> requests){
 
 
-
-        if (requests == null)
+        if(requests==null){
             return;
+        }
 
 
 
-        Map<Long, Material> existing =
+        Map<Long,Material> existingMaterials =
                 product.getMaterials()
                         .stream()
-                        .filter(m -> m.getId() != null)
+                        .filter(material ->
+                                material.getId()!=null)
                         .collect(Collectors.toMap(
                                 Material::getId,
-                                m -> m
+                                material -> material
                         ));
 
 
@@ -264,84 +378,98 @@ public class ProductService {
 
 
 
-        for (MaterialRequest req : requests) {
+        for(MaterialRequest request : requests){
 
 
 
             // NEW MATERIAL
 
-            if (req.getId() == null) {
+            if(request.getId()==null){
 
 
                 Material material = new Material();
 
-
-                material.setMaterialName(req.getMaterialName());
-
-                // CHANGE: Added HSN Code
-                material.setHsnCode(req.getHsnCode());
-
-                material.setUnit(req.getUnit());
-                material.setCurrentPrice(req.getCurrentPrice());
+                material.setMaterialName(request.getMaterialName());
+                material.setHsnCode(request.getHsnCode());
+                material.setUnit(request.getUnit());
+                material.setCurrentPrice(request.getCurrentPrice());
                 material.setActive(true);
+
+
+
+                product.addMaterial(material);
 
 
 
                 addNewMaterialPriceVersion(
                         material,
-                        req.getCurrentPrice()
+                        request.getCurrentPrice()
                 );
 
 
-                product.addMaterial(material);
+
+                continue;
 
             }
 
 
 
-            // UPDATE MATERIAL
 
-            else {
+            // EXISTING MATERIAL
 
-
-                incomingIds.add(req.getId());
-
-
-                Material material = existing.get(req.getId());
+            incomingIds.add(request.getId());
 
 
 
-                if (material != null) {
-
-
-                    boolean priceChanged =
-                            material.getCurrentPrice() == null ||
-                                    material.getCurrentPrice()
-                                            .compareTo(req.getCurrentPrice()) != 0;
+            Material material =
+                    existingMaterials.get(request.getId());
 
 
 
-                    material.setMaterialName(req.getMaterialName());
-
-                    // CHANGE: Added HSN Code
-                    material.setHsnCode(req.getHsnCode());
-
-                    material.setUnit(req.getUnit());
+            if(material==null){
+                continue;
+            }
 
 
 
-                    if (priceChanged) {
+            boolean priceChanged =
+                    material.getCurrentPrice()==null
+                            ||
+                            request.getCurrentPrice()==null
+                            ||
+                            material.getCurrentPrice()
+                                    .compareTo(
+                                            request.getCurrentPrice()
+                                    )!=0;
 
-                        material.setCurrentPrice(req.getCurrentPrice());
 
-                        addNewMaterialPriceVersion(
-                                material,
-                                req.getCurrentPrice()
-                        );
 
-                    }
+            material.setMaterialName(
+                    request.getMaterialName()
+            );
 
-                }
+            material.setHsnCode(
+                    request.getHsnCode()
+            );
+
+            material.setUnit(
+                    request.getUnit()
+            );
+
+
+
+            if(priceChanged){
+
+
+                material.setCurrentPrice(
+                        request.getCurrentPrice()
+                );
+
+
+                addNewMaterialPriceVersion(
+                        material,
+                        request.getCurrentPrice()
+                );
 
             }
 
@@ -349,19 +477,21 @@ public class ProductService {
 
 
 
-        // CHANGE:
-        // Previously removed relationship using removeIf()
-        // Now soft deletes material because product_id is NOT NULL
+
+        // SOFT DELETE REMOVED MATERIALS
 
         product.getMaterials()
                 .stream()
-                .filter(m ->
-                        m.getId() != null &&
-                                !incomingIds.contains(m.getId()))
-                .forEach(m -> {
+                .filter(material ->
+                        material.getId()!=null
+                                &&
+                                !incomingIds.contains(material.getId()))
+                .forEach(material -> {
 
-                    m.setActive(false);
-                    m.setDeletedAt(LocalDateTime.now());
+                    material.setActive(false);
+                    material.setDeletedAt(
+                            LocalDateTime.now()
+                    );
 
                 });
 
@@ -372,31 +502,35 @@ public class ProductService {
 
 
     // =========================================================
-    // MATERIAL PRICE VERSIONING (UNIFIED)
+    // MATERIAL PRICE HISTORY
     // =========================================================
 
     private void addNewMaterialPriceVersion(
             Material material,
-            BigDecimal price) {
+            BigDecimal price){
 
 
 
-        material.getPriceHistory().stream()
-                .filter(h -> h.getEffectiveTo() == null)
+        material.getPriceHistory()
+                .stream()
+                .filter(history ->
+                        history.getEffectiveTo()==null)
                 .findFirst()
-                .ifPresent(h ->
-                        h.setEffectiveTo(LocalDate.now()));
+                .ifPresent(history ->
+                        history.setEffectiveTo(
+                                LocalDate.now()
+                        ));
+
 
 
 
         MaterialPriceHistory history =
-                new MaterialPriceHistory();
-
-
-        history.setMaterial(material);
-        history.setPrice(price);
-        history.setEffectiveFrom(LocalDate.now());
-        history.setEffectiveTo(null);
+                MaterialPriceHistory.builder()
+                        .material(material)
+                        .price(price)
+                        .effectiveFrom(LocalDate.now())
+                        .effectiveTo(null)
+                        .build();
 
 
 
@@ -409,21 +543,21 @@ public class ProductService {
 
 
     // =========================================================
-    // PROFIT CALCULATION
+    // PROFIT MARGIN
     // =========================================================
 
     private BigDecimal calculateProfitMargin(
             BigDecimal manufacturingCost,
-            BigDecimal sellingPrice) {
+            BigDecimal sellingPrice){
 
 
-        if (manufacturingCost == null ||
-                manufacturingCost.compareTo(BigDecimal.ZERO) == 0) {
+        if(manufacturingCost==null
+                ||
+                manufacturingCost.compareTo(BigDecimal.ZERO)==0){
 
             return BigDecimal.ZERO;
 
         }
-
 
 
         return sellingPrice
@@ -434,10 +568,7 @@ public class ProductService {
                         RoundingMode.HALF_UP
                 )
                 .multiply(BigDecimal.valueOf(100))
-                .setScale(
-                        2,
-                        RoundingMode.HALF_UP
-                );
+                .setScale(2,RoundingMode.HALF_UP);
 
     }
 
@@ -445,14 +576,20 @@ public class ProductService {
 
 
 
-    private ProductFullResponse mapToFullResponse(Product product) {
+    // =========================================================
+    // RESPONSE MAPPER
+    // =========================================================
+
+    private ProductFullResponse mapToFullResponse(
+            Product product){
 
 
-        ProductPriceHistory latest =
+
+        ProductPriceHistory latestPrice =
                 product.getPriceHistory()
                         .stream()
-                        .filter(h ->
-                                h.getEffectiveTo() == null)
+                        .filter(history ->
+                                history.getEffectiveTo()==null)
                         .findFirst()
                         .orElse(null);
 
@@ -461,16 +598,14 @@ public class ProductService {
         List<MaterialResponse> materials =
                 product.getMaterials()
                         .stream()
-
-                        // CHANGE: Ignore soft deleted materials
                         .filter(Material::getActive)
-
-                        .map(m ->
+                        .map(material ->
                                 MaterialResponse.builder()
-                                        .materialId(m.getId())
-                                        .materialName(m.getMaterialName())
-                                        .unit(m.getUnit())
-                                        .currentPrice(m.getCurrentPrice())
+                                        .materialId(material.getId())
+                                        .materialName(material.getMaterialName())
+                                        .hsnCode(material.getHsnCode())
+                                        .unit(material.getUnit())
+                                        .currentPrice(material.getCurrentPrice())
                                         .build()
                         )
                         .toList();
@@ -478,35 +613,26 @@ public class ProductService {
 
 
         return ProductFullResponse.builder()
-
                 .productId(product.getId())
-
                 .productName(product.getProductName())
-
                 .description(product.getDescription())
-
                 .active(product.getActive())
-
                 .manufacturingCost(
-                        latest != null ?
-                                latest.getManufacturingCost()
+                        latestPrice!=null
+                                ? latestPrice.getManufacturingCost()
                                 : null
                 )
-
                 .sellingPrice(
-                        latest != null ?
-                                latest.getSellingPrice()
+                        latestPrice!=null
+                                ? latestPrice.getSellingPrice()
                                 : null
                 )
-
                 .profitMargin(
-                        latest != null ?
-                                latest.getProfitMargin()
+                        latestPrice!=null
+                                ? latestPrice.getProfitMargin()
                                 : null
                 )
-
                 .materials(materials)
-
                 .build();
 
     }

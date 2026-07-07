@@ -17,5 +17,6 @@ public class MaterialResponse {
     private Long materialId;
     private String materialName;
     private String unit;
+    private String hsnCode;
     private BigDecimal currentPrice;
 }
