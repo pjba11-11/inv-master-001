@@ -22,6 +22,8 @@ public class MaterialRequest {
 
     private String materialName;
 
+    private String hsnCode;
+
     private String unit;
 
     @NotNull

@@ -6,6 +6,4 @@ import com.inv.invmaster001.entity.InvoiceSequence;
 
 @Repository
 public interface InvoiceSequenceRepository extends JpaRepository<InvoiceSequence, Long> {
-    // Find by company and year
-    InvoiceSequence findByCompanyIdAndYear(Long companyId, Integer year);
 }

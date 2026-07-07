@@ -1,47 +1,61 @@
 package com.inv.invmaster001.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-
 import lombok.*;
 
-/**
- * InvoiceSequence entity mapped from the invoice_sequences table.
- */
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "invoice_sequences",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"company_id", "year"}))
-@Builder
+@Table(
+        name = "invoice_sequences",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_company_invoice_number",
+                        columnNames = {
+                                "company_id",
+                                "invoice_number"
+                        }
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class InvoiceSequence {
 
-    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
+
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(name = "year", nullable = false)
-    private Integer year;
 
-    @Column(name = "prefix", length = 20)
-    private String prefix;
+    // Stored reference only - no FK
+    @Column(name = "invoice_id", nullable = false)
+    private Long invoiceId;
 
-    @Column(name = "next_number", nullable = false)
-    private Integer nextNumber;
+
+    @Column(name = "invoice_number", length = 50)
+    private String invoiceNumber;
+
+
+    @Column(name = "invoice_date", nullable = false)
+    private LocalDate invoiceDate;
+
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
