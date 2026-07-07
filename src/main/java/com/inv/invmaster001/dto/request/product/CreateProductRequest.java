@@ -20,8 +20,6 @@ import java.util.List;
 @Builder
 public class CreateProductRequest {
 
-    private Long companyId;
-
     @NotBlank
     private String productName;
 

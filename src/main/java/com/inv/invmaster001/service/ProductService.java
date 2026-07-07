@@ -12,9 +12,10 @@ import com.inv.invmaster001.entity.Material;
 import com.inv.invmaster001.entity.MaterialPriceHistory;
 import com.inv.invmaster001.entity.Product;
 import com.inv.invmaster001.entity.ProductPriceHistory;
+import com.inv.invmaster001.exception.CompanyNotFoundException;
+import com.inv.invmaster001.exception.ProductNotFoundException;
 import com.inv.invmaster001.repository.CompanyRepository;
 import com.inv.invmaster001.repository.ProductRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,13 +54,15 @@ public class ProductService {
     // =========================================================
     // CREATE PRODUCT
     // =========================================================
+    public ProductResponse createProduct(
+            CreateProductRequest request,
+            Long companyId) {
 
-    public ProductResponse createProduct(CreateProductRequest request) {
-
-
-        Company company = companyRepository.findById(request.getCompanyId())
+        Company company = companyRepository.findById(companyId)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Company not found"));
+                        new CompanyNotFoundException(
+                                "Company not found"
+                        ));
 
 
         Product product = new Product();
@@ -70,72 +73,54 @@ public class ProductService {
         product.setActive(true);
 
 
-        // PRODUCT PRICE VERSION
-
         addNewProductPriceVersion(
-                product,
-                request.getManufacturingCost(),
-                request.getSellingPrice()
-        );
+                product, request.getManufacturingCost(), request.getSellingPrice());
 
-
-
-        // MATERIALS
 
         for (MaterialRequest req : request.getMaterials()) {
-
 
             Material material = new Material();
 
             material.setMaterialName(req.getMaterialName());
-
-            // CHANGE: Added HSN Code
             material.setHsnCode(req.getHsnCode());
-
             material.setUnit(req.getUnit());
             material.setCurrentPrice(req.getCurrentPrice());
             material.setActive(true);
 
-
-
-            // MATERIAL PRICE VERSION (UNIFIED)
-
-            addNewMaterialPriceVersion(
-                    material,
-                    req.getCurrentPrice()
-            );
-
-
+            addNewMaterialPriceVersion(material, req.getCurrentPrice());
             product.addMaterial(material);
         }
 
-
-
         Product saved = productRepository.save(product);
-
 
         return ProductResponse.builder()
                 .id(saved.getId())
                 .message("Product created successfully")
                 .build();
-
     }
-
-
 
     // =========================================================
     // UPDATE PRODUCT
     // =========================================================
-
-    public ProductResponse updateProduct(
-            Long productId,
-            UpdateProductRequest request) {
+    public ProductResponse updateProduct(Long productId, UpdateProductRequest request,
+            Long companyId) {
 
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Product not found"));
+                        new ProductNotFoundException(
+                                "Product not found"
+                        ));
 
+
+        if (!product.getCompany()
+                .getId()
+                .equals(companyId)) {
+
+            throw new RuntimeException(
+                    "You cannot access this product"
+            );
+        }
 
 
         product.setProductName(request.getProductName());
@@ -143,77 +128,66 @@ public class ProductService {
         product.setActive(request.getActive());
 
 
-
-        // PRODUCT PRICE VERSIONING
-
         if (request.getManufacturingCost() != null &&
                 request.getSellingPrice() != null) {
 
 
             addNewProductPriceVersion(
-                    product,
-                    request.getManufacturingCost(),
-                    request.getSellingPrice()
+                    product, request.getManufacturingCost(), request.getSellingPrice()
             );
-
         }
 
-
-
-        // MATERIAL SYNC
 
         syncMaterials(product, request.getMaterials());
 
 
-
         productRepository.save(product);
-
 
 
         return ProductResponse.builder()
                 .id(product.getId())
                 .message("Product updated successfully")
                 .build();
-
     }
-
-
-
     // =========================================================
     // DELETE PRODUCT (SOFT DELETE)
     // =========================================================
 
-    public void deleteProduct(Long productId) {
+    public void deleteProduct(
+            Long productId,
+            Long companyId) {
 
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Product not found"));
+                        new ProductNotFoundException("Product not found"));
 
+
+        if (!product.getCompany()
+                .getId()
+                .equals(companyId)) {
+
+            throw new RuntimeException(
+                    "You cannot access this product"
+            );
+        }
 
 
         product.setActive(false);
         product.setDeletedAt(LocalDateTime.now());
 
 
+        product.getMaterials()
+                .forEach(material -> {
 
-        product.getMaterials().forEach(m -> {
+                    material.setActive(false);
+                    material.setDeletedAt(LocalDateTime.now());
 
-            m.setActive(false);
-            m.setDeletedAt(LocalDateTime.now());
-
-        });
-
+                });
 
 
         productRepository.save(product);
-
     }
-
-
-
-
-
     // =========================================================
     // PRODUCT PRICE VERSIONING
     // =========================================================
