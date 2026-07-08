@@ -14,20 +14,25 @@ import com.inv.invmaster001.entity.ProductPriceHistory;
 import com.inv.invmaster001.entity.Settings;
 import com.inv.invmaster001.entity.User;
 import com.inv.invmaster001.exception.ProductNotFoundException;
+import com.inv.invmaster001.repository.CustomerRepository;
 import com.inv.invmaster001.repository.InvoiceRepository;
 import com.inv.invmaster001.repository.InvoiceSequenceRepository;
 import com.inv.invmaster001.repository.ProductPriceHistoryRepository;
 import com.inv.invmaster001.repository.ProductRepository;
 import com.inv.invmaster001.repository.SettingsRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
 
 
 @Service
@@ -38,13 +43,21 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
 
+
     private final InvoiceSequenceRepository invoiceSequenceRepository;
+
 
     private final ProductRepository productRepository;
 
+
     private final ProductPriceHistoryRepository productPriceHistoryRepository;
 
+
     private final SettingsRepository settingsRepository;
+
+
+    private final CustomerRepository customerRepository;
+
 
 
     // =========================================================
@@ -56,20 +69,46 @@ public class InvoiceService {
             User currentUser) {
 
 
-        Company company = currentUser.getCompany();
+        Company company =
+                currentUser.getCompany();
+
+
+
+        // =====================================================
+        // CUSTOMER VALIDATION
+        // =====================================================
+
+        customerRepository
+                .findByIdAndCompanyIdAndDeletedAtIsNull(
+                        request.getCustomerId(),
+                        company.getId()
+                )
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Customer not found"
+                        ));
+
+
+
 
 
         Settings settings =
                 settingsRepository.findByCompanyId(company.getId())
+
                         .orElseThrow(() ->
                                 new RuntimeException(
                                         "Settings not found"
                                 ));
 
 
+
+
+
         Invoice invoice = Invoice.builder()
 
+
                 .company(company)
+
 
                 .createdBy(currentUser)
 
@@ -79,9 +118,15 @@ public class InvoiceService {
                 )
 
 
-                .invoiceDate(LocalDate.now())
+                .invoiceDate(
+                        LocalDate.now()
+                )
 
-                .status("GENERATED")
+
+                .status(
+                        "GENERATED"
+                )
+
 
                 .discount(
                         request.getDiscount() == null
@@ -89,26 +134,37 @@ public class InvoiceService {
                                 : request.getDiscount()
                 )
 
-                .remarks(request.getRemarks())
+
+                .remarks(
+                        request.getRemarks()
+                )
+
 
                 .build();
+
+
+
 
 
         BigDecimal subtotal =
                 BigDecimal.ZERO;
 
 
+
         List<InvoiceLineItemResponse> itemResponses =
                 new ArrayList<>();
+
+
+
 
 
         // =====================================================
         // CREATE LINE ITEMS
         // =====================================================
 
-
         for (InvoiceItemRequest itemRequest :
                 request.getItems()) {
+
 
 
             Product product =
@@ -117,25 +173,36 @@ public class InvoiceService {
                                     itemRequest.getProductId(),
                                     company.getId()
                             )
+
                             .orElseThrow(() ->
                                     new ProductNotFoundException(
                                             "Product not found"
                                     ));
 
 
+
+
+
             ProductPriceHistory priceHistory =
                     productPriceHistoryRepository
+
                             .findByProductIdAndEffectiveToIsNull(
                                     product.getId()
                             )
+
                             .orElseThrow(() ->
                                     new RuntimeException(
                                             "Product price not found"
                                     ));
 
 
+
+
+
             BigDecimal unitPrice =
                     priceHistory.getSellingPrice();
+
+
 
 
             BigDecimal lineTotal =
@@ -144,62 +211,89 @@ public class InvoiceService {
                     );
 
 
+
+
             subtotal =
                     subtotal.add(lineTotal);
+
+
+
 
 
             InvoiceLineItem lineItem =
                     InvoiceLineItem.builder()
 
+
                             .productId(
                                     product.getId()
                             )
+
 
                             .productName(
                                     product.getProductName()
                             )
 
+
                             .quantity(
                                     itemRequest.getQuantity()
                             )
+
 
                             .unitPrice(
                                     unitPrice
                             )
 
+
                             .build();
+
+
+
 
 
             invoice.addLineItem(lineItem);
 
 
+
+
+
             itemResponses.add(
+
                     InvoiceLineItemResponse.builder()
+
 
                             .productId(
                                     product.getId()
                             )
 
+
                             .productName(
                                     product.getProductName()
                             )
+
 
                             .quantity(
                                     itemRequest.getQuantity()
                             )
 
+
                             .unitPrice(
                                     unitPrice
                             )
+
 
                             .totalPrice(
                                     lineTotal
                             )
 
+
                             .build()
+
             );
 
         }
+
+
+
 
 
         // =====================================================
@@ -209,14 +303,23 @@ public class InvoiceService {
 
         BigDecimal cgstPercentage =
                 settings.getCgstPercentage() == null
+
                         ? BigDecimal.ZERO
+
                         : settings.getCgstPercentage();
+
+
 
 
         BigDecimal sgstPercentage =
                 settings.getSgstPercentage() == null
+
                         ? BigDecimal.ZERO
+
                         : settings.getSgstPercentage();
+
+
+
 
 
         BigDecimal cgst =
@@ -226,6 +329,9 @@ public class InvoiceService {
                 );
 
 
+
+
+
         BigDecimal sgst =
                 calculatePercentage(
                         subtotal,
@@ -233,24 +339,42 @@ public class InvoiceService {
                 );
 
 
+
+
+
         BigDecimal discount =
                 invoice.getDiscount();
 
 
+
+
+
         BigDecimal grandTotal =
                 subtotal
+
                         .add(cgst)
+
                         .add(sgst)
+
                         .subtract(discount);
+
+
+
 
 
         invoice.setSubtotal(subtotal);
 
+
         invoice.setCgst(cgst);
+
 
         invoice.setSgst(sgst);
 
+
         invoice.setGrandTotal(grandTotal);
+
+
+
 
 
         // =====================================================
@@ -260,6 +384,9 @@ public class InvoiceService {
 
         Invoice savedInvoice =
                 invoiceRepository.save(invoice);
+
+
+
 
 
         // =====================================================
@@ -275,12 +402,20 @@ public class InvoiceService {
                 );
 
 
+
+
+
         savedInvoice.setInvoiceNumber(
                 invoiceNumber
         );
 
 
+
+
         invoiceRepository.save(savedInvoice);
+
+
+
 
 
         // =====================================================
@@ -291,71 +426,96 @@ public class InvoiceService {
         InvoiceSequence sequence =
                 InvoiceSequence.builder()
 
+
                         .company(company)
+
 
                         .invoiceId(
                                 savedInvoice.getId()
                         )
 
+
                         .invoiceNumber(
                                 invoiceNumber
                         )
+
 
                         .invoiceDate(
                                 LocalDate.now()
                         )
 
+
                         .build();
+
+
+
 
 
         invoiceSequenceRepository.save(sequence);
 
 
+
+
+
         return InvoiceResponse.builder()
+
 
                 .invoiceId(
                         savedInvoice.getId()
                 )
 
+
                 .invoiceNumber(
                         invoiceNumber
                 )
+
 
                 .invoiceDate(
                         savedInvoice.getInvoiceDate()
                 )
 
+
                 .subtotal(
                         subtotal
                 )
+
 
                 .cgst(
                         cgst
                 )
 
+
                 .sgst(
                         sgst
                 )
+
 
                 .discount(
                         discount
                 )
 
+
                 .grandTotal(
                         grandTotal
                 )
+
 
                 .status(
                         savedInvoice.getStatus()
                 )
 
+
                 .items(
                         itemResponses
                 )
 
+
                 .build();
 
     }
+
+
+
 
 
     // =========================================================
@@ -368,7 +528,9 @@ public class InvoiceService {
 
 
         return amount
+
                 .multiply(percentage)
+
                 .divide(
                         BigDecimal.valueOf(100),
                         2,
@@ -376,6 +538,9 @@ public class InvoiceService {
                 );
 
     }
+
+
+
 
 
     // =========================================================
@@ -396,7 +561,9 @@ public class InvoiceService {
 
 
         return prefix
+
                 + "-"
+
                 + String.format(
                 "%05d",
                 invoiceId
