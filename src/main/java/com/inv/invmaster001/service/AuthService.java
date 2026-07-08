@@ -62,7 +62,7 @@ public class AuthService {
                 .accountNumber(request.getAccountNumber())
                 .ifsc(request.getIfsc())
                 .upiId(request.getUpiId())
-                .logoUrl(request.getLogoUrl())
+                .logo(request.getLogo())
                 .build();
 
         companyRepository.save(company);

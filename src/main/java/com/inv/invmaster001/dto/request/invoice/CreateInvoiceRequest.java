@@ -1,5 +1,6 @@
 package com.inv.invmaster001.dto.request.invoice;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,6 +16,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateInvoiceRequest {
+
+    @NotNull
+    private Long customerId;
 
     private List<InvoiceItemRequest> items;
 

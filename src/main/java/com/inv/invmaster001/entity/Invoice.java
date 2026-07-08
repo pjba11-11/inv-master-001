@@ -41,7 +41,8 @@ public class Invoice {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
-
+    @Column(name = "customer_id", nullable = false)
+    private Long customerId;
 
     @OneToMany(
             mappedBy = "invoice",
@@ -97,7 +98,7 @@ public class Invoice {
 
     private LocalDateTime updatedAt;
 
-
+    private LocalDateTime deletedAt;
 
     // ===============================
     // Bidirectional helpers

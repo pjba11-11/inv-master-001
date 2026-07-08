@@ -1,23 +1,73 @@
--- ============================================
--- COMPANIES
--- ============================================
-
 CREATE TABLE companies
 (
     id             BIGSERIAL PRIMARY KEY,
+
     company_name   VARCHAR(150) NOT NULL,
+
     gst_number     VARCHAR(30),
+
     phone          VARCHAR(20),
+
     email          VARCHAR(255),
+
     address        TEXT,
+
+
+    -- BANK DETAILS
     bank_name      VARCHAR(100),
+
     account_number VARCHAR(50),
+
     ifsc           VARCHAR(20),
+
     upi_id         VARCHAR(50),
-    logo_url       TEXT,
+
+
+    -- LOGO PATH / URL
+    logo           TEXT,
+
 
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
     updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    deleted_at     TIMESTAMP
+);
+
+-- ============================================
+-- CUSTOMERS
+-- ============================================
+
+CREATE TABLE customers
+(
+    id             BIGSERIAL PRIMARY KEY,
+
+    company_id     BIGINT NOT NULL
+        REFERENCES companies(id),
+
+    customer_name  VARCHAR(150) NOT NULL,
+
+    gst_number     VARCHAR(30),
+
+    phone          VARCHAR(20),
+
+    email          VARCHAR(255),
+
+    address        TEXT,
+
+    bank_name      VARCHAR(100),
+
+    account_number VARCHAR(50),
+
+    ifsc           VARCHAR(20),
+
+    upi_id         VARCHAR(50),
+
+
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
     deleted_at     TIMESTAMP
 );
 
@@ -195,6 +245,8 @@ CREATE TABLE invoices
 
     created_by     BIGINT NOT NULL
         REFERENCES users (id),
+
+    customer_id    BIGINT NOT NULL,
 
     invoice_date   DATE   NOT NULL,
 

@@ -1,20 +1,39 @@
-package com.inv.invmaster001.dto.request;
+package com.inv.invmaster001.dto.request.customer;
 
-import lombok.Builder;
-import lombok.Data;
 
-@Data
-@Builder
-public class RegisterCompanyRequest {
+import lombok.Getter;
+import lombok.Setter;
 
-    private String companyName;
+
+@Getter
+@Setter
+public class UpdateCustomerRequest {
+
+
+    private String customerName;
+
+
     private String gstNumber;
+
+
     private String phone;
+
+
     private String email;
+
+
     private String address;
+
+
     private String bankName;
+
+
     private String accountNumber;
+
+
     private String ifsc;
+
+
     private String upiId;
-    private String logo;
+
 }

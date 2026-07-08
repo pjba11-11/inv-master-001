@@ -49,8 +49,13 @@ public class Company {
     private List<Product> products = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
     private List<Invoice> invoices = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Customer> customers = new ArrayList<>();
+
 
     // =========================
     // FIELDS
@@ -59,63 +64,131 @@ public class Company {
     @Column(nullable = false, length = 150)
     private String companyName;
 
+
+    @Column(name = "gst_number", length = 30)
     private String gstNumber;
+
+
+    @Column(length = 20)
     private String phone;
+
+
+    @Column(length = 255)
     private String email;
 
+
+    @Column(columnDefinition = "TEXT")
     private String address;
 
+
+    @Column(name = "bank_name", length = 100)
     private String bankName;
+
+
+    @Column(name = "account_number", length = 50)
     private String accountNumber;
+
+
+    @Column(length = 20)
     private String ifsc;
+
+
+    @Column(name = "upi_id", length = 50)
     private String upiId;
 
-    private String logoUrl;
+
+    @Column(name = "logo", columnDefinition = "TEXT")
+    private String logo;
+
+
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+
     private LocalDateTime updatedAt;
+
+
     private LocalDateTime deletedAt;
+
 
 
     @PrePersist
     public void prePersist() {
+
         this.createdAt = LocalDateTime.now();
+
         this.updatedAt = LocalDateTime.now();
+
     }
+
+
 
     @PreUpdate
     public void preUpdate() {
+
         this.updatedAt = LocalDateTime.now();
+
     }
+
 
 
     public void addUser(User user) {
+
         users.add(user);
+
         user.setCompany(this);
+
     }
+
+
 
     public void addProduct(Product product) {
+
         products.add(product);
+
         product.setCompany(this);
+
     }
 
+
+
     public void addInvoice(Invoice invoice) {
+
         invoices.add(invoice);
+
         invoice.setCompany(this);
+
     }
+
+
+
+    public void addCustomer(Customer customer) {
+
+        customers.add(customer);
+
+        customer.setCompany(this);
+
+    }
+
+
 
     public void setSettings(Settings settings) {
 
         if (this.settings != null) {
+
             this.settings.setCompany(null);
+
         }
 
         this.settings = settings;
 
         if (settings != null) {
+
             settings.setCompany(this);
+
         }
+
     }
+
 }

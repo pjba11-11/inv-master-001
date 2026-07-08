@@ -73,6 +73,12 @@ public class InvoiceService {
 
                 .createdBy(currentUser)
 
+
+                .customerId(
+                        request.getCustomerId()
+                )
+
+
                 .invoiceDate(LocalDate.now())
 
                 .status("GENERATED")
