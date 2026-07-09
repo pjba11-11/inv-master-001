@@ -22,7 +22,7 @@
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: "DejaVu Sans", Helvetica, sans-serif;
             font-size: 11px;
             color: #333333;
             margin: 0;
@@ -234,7 +234,7 @@
 
         .grand-total td {
             background: #1f4e79;
-            color: #ffffff;
+            color: #000000;
             font-weight: bold;
             font-size: 13px;
         }
@@ -529,7 +529,7 @@
                 <tr>
                     <td>Subtotal</td>
                     <td class="text-right"
-                        th:text="${'₹' + #numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}">
+                        th:text="${'Rs.' + #numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}">
                     </td>
                 </tr>
 
@@ -540,7 +540,7 @@
                     </td>
 
                     <td class="text-right"
-                        th:text="${'₹' + #numbers.formatDecimal(cgst,1,'COMMA',2,'POINT')}">
+                        th:text="${'Rs.' + #numbers.formatDecimal(cgst,1,'COMMA',2,'POINT')}">
                     </td>
                 </tr>
 
@@ -551,7 +551,7 @@
                     </td>
 
                     <td class="text-right"
-                        th:text="${'₹' + #numbers.formatDecimal(sgst,1,'COMMA',2,'POINT')}">
+                        th:text="${'Rs.' + #numbers.formatDecimal(sgst,1,'COMMA',2,'POINT')}">
                     </td>
                 </tr>
 
@@ -559,7 +559,7 @@
                     <td>Discount</td>
 
                     <td class="text-right"
-                        th:text="${'₹' + #numbers.formatDecimal(discount,1,'COMMA',2,'POINT')}">
+                        th:text="${'Rs.' + #numbers.formatDecimal(discount,1,'COMMA',2,'POINT')}">
                     </td>
                 </tr>
 
@@ -568,7 +568,7 @@
                     <td>Grand Total</td>
 
                     <td class="text-right"
-                        th:text="${'₹' + #numbers.formatDecimal(grandTotal,1,'COMMA',2,'POINT')}">
+                        th:text="${'Rs.' + #numbers.formatDecimal(grandTotal,1,'COMMA',2,'POINT')}">
                     </td>
 
                 </tr>
