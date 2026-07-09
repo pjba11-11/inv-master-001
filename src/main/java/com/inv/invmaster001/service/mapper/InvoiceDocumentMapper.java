@@ -139,6 +139,13 @@ public class InvoiceDocumentMapper {
                         invoice.getSgst()
                 )
 
+                .cgstPercentage(
+                        invoice.getCgstPercentage()
+                )
+
+                .sgstPercentage(
+                        invoice.getSgstPercentage()
+                )
                 .discount(
                         invoice.getDiscount()
                 )

@@ -126,6 +126,16 @@ public class InvoicePdfService {
         );
 
         context.setVariable(
+                "cgstPercentage",
+                data.getCgstPercentage()
+        );
+
+        context.setVariable(
+                "sgstPercentage",
+                data.getSgstPercentage()
+        );
+
+        context.setVariable(
                 "discount",
                 data.getDiscount()
         );
