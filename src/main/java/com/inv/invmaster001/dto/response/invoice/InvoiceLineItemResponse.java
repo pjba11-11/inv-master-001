@@ -19,6 +19,8 @@ public class InvoiceLineItemResponse {
 
     private String productName;
 
+    private  String hsnCode;
+
     private BigDecimal quantity;
 
     private BigDecimal unitPrice;

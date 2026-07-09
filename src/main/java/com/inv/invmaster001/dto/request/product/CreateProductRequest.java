@@ -29,6 +29,8 @@ public class CreateProductRequest {
 
     private BigDecimal sellingPrice;
 
+    private String hsnCode;
+
     @Valid
     @NotEmpty
     private List<MaterialRequest> materials;

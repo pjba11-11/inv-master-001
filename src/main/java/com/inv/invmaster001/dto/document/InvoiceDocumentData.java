@@ -64,6 +64,7 @@ public class InvoiceDocumentData {
     private BigDecimal sgst;
     private BigDecimal discount;
     private BigDecimal grandTotal;
+    private String grandTotalWords;
 
     private String remarks;
 }

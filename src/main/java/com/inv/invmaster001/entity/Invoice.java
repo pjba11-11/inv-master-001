@@ -80,11 +80,22 @@ public class Invoice {
     private BigDecimal sgst;
 
 
+    @Column(name = "cgst_percentage", precision = 5, scale = 2)
+    private BigDecimal cgstPercentage;
+
+
+    @Column(name = "sgst_percentage", precision = 5, scale = 2)
+    private BigDecimal sgstPercentage;
+
+
     private BigDecimal discount;
 
 
     private BigDecimal grandTotal;
 
+
+    @Column(name = "grand_total_words", nullable = false)
+    private String grandTotalWords;
 
     private String status;
 

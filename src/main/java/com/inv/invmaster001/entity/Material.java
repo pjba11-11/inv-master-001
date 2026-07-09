@@ -60,8 +60,6 @@ public class Material {
     private String materialName;
 
 
-    @Column(name = "hsn_code", length = 20)
-    private String hsnCode;
 
 
     @Column(name = "unit", length = 20)

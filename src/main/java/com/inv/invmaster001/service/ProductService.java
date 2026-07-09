@@ -91,6 +91,7 @@ public class ProductService {
         Product product = new Product();
 
         product.setCompany(company);
+        product.setHsnCode(request.getHsnCode());
         product.setProductName(request.getProductName());
         product.setDescription(request.getDescription());
         product.setActive(true);
@@ -111,7 +112,6 @@ public class ProductService {
                 Material material = new Material();
 
                 material.setMaterialName(req.getMaterialName());
-                material.setHsnCode(req.getHsnCode());
                 material.setUnit(req.getUnit());
                 material.setCurrentPrice(req.getCurrentPrice());
                 material.setActive(true);
@@ -183,6 +183,9 @@ public class ProductService {
                 request.getActive()
         );
 
+        product.setHsnCode(
+                request.getHsnCode()
+        );
 
         if (request.getManufacturingCost() != null
                 &&
@@ -361,7 +364,6 @@ public class ProductService {
                 Material material = new Material();
 
                 material.setMaterialName(request.getMaterialName());
-                material.setHsnCode(request.getHsnCode());
                 material.setUnit(request.getUnit());
                 material.setCurrentPrice(request.getCurrentPrice());
                 material.setActive(true);
@@ -410,9 +412,6 @@ public class ProductService {
                     request.getMaterialName()
             );
 
-            material.setHsnCode(
-                    request.getHsnCode()
-            );
 
             material.setUnit(
                     request.getUnit()
@@ -547,7 +546,7 @@ public class ProductService {
                                 MaterialResponse.builder()
                                         .materialId(material.getId())
                                         .materialName(material.getMaterialName())
-                                        .hsnCode(material.getHsnCode())
+
                                         .unit(material.getUnit())
                                         .currentPrice(material.getCurrentPrice())
                                         .build()
@@ -558,6 +557,7 @@ public class ProductService {
         return ProductFullResponse.builder()
                 .productId(product.getId())
                 .productName(product.getProductName())
+                .hsnCode(product.getHsnCode())
                 .description(product.getDescription())
                 .active(product.getActive())
                 .manufacturingCost(

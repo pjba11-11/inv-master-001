@@ -30,6 +30,8 @@ public class UpdateProductRequest {
 
     private BigDecimal sellingPrice;
 
+    private String hsnCode;
+
     @Valid
     private List<MaterialRequest> materials;
 }

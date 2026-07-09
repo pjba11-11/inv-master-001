@@ -65,6 +65,9 @@ public class Product {
 
     private Boolean active = true;
 
+    @Column(name = "hsn_code", length = 20)
+    private String hsnCode;
+
 
     private LocalDateTime createdAt;
 

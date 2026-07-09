@@ -136,6 +136,11 @@ public class InvoicePdfService {
         );
 
         context.setVariable(
+                "grandTotalWords",
+                data.getGrandTotalWords()
+        );
+
+        context.setVariable(
                 "remarks",
                 data.getRemarks()
         );

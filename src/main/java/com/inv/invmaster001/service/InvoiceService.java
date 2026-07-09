@@ -23,6 +23,7 @@ import com.inv.invmaster001.repository.ProductRepository;
 import com.inv.invmaster001.repository.SettingsRepository;
 import com.inv.invmaster001.repository.UserRepository;
 import com.inv.invmaster001.service.document.InvoiceDocumentService;
+import com.inv.invmaster001.util.NumberToWordsUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -162,6 +163,7 @@ public class InvoiceService {
                     InvoiceLineItem.builder()
                             .productId(product.getId())
                             .productName(product.getProductName())
+                            .hsnCode(product.getHsnCode())
                             .quantity(itemRequest.getQuantity())
                             .unitPrice(unitPrice)
                             .build();
@@ -172,6 +174,7 @@ public class InvoiceService {
                     InvoiceLineItemResponse.builder()
                             .productId(product.getId())
                             .productName(product.getProductName())
+                            .hsnCode(product.getHsnCode())
                             .quantity(itemRequest.getQuantity())
                             .unitPrice(unitPrice)
                             .totalPrice(lineTotal)
@@ -216,9 +219,14 @@ public class InvoiceService {
 
         invoice.setSubtotal(subtotal);
         invoice.setPoNumber(request.getPoNumber());
+        invoice.setCgstPercentage(cgstPercentage);
+        invoice.setSgstPercentage(sgstPercentage);
         invoice.setCgst(cgst);
         invoice.setSgst(sgst);
         invoice.setGrandTotal(grandTotal);
+        invoice.setGrandTotalWords(
+                NumberToWordsUtil.convert(grandTotal)
+        );
         // =====================================================
         // SAVE INVOICE
         // =====================================================
@@ -305,6 +313,14 @@ public class InvoiceService {
                 .sgst(
                         sgst
                 )
+                .cgstPercentage(
+                        cgstPercentage
+                )
+
+                .sgstPercentage(
+                        sgstPercentage
+                )
+
 
                 .discount(
                         discount

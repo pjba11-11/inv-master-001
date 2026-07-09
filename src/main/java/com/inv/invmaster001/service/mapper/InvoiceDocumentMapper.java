@@ -147,6 +147,9 @@ public class InvoiceDocumentMapper {
                         invoice.getGrandTotal()
                 )
 
+                .grandTotalWords(
+                        invoice.getGrandTotalWords()
+                )
 
                 .remarks(
                         invoice.getRemarks()
@@ -179,6 +182,10 @@ public class InvoiceDocumentMapper {
 
                                 .productName(
                                         item.getProductName()
+                                )
+
+                                .hsnCode(
+                                        item.getHsnCode()
                                 )
 
                                 .quantity(

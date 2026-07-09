@@ -18,7 +18,7 @@ public class ProductFullResponse {
     private String productName;
     private String description;
     private Boolean active;
-
+    private String hsnCode;
     private BigDecimal manufacturingCost;
     private BigDecimal sellingPrice;
     private BigDecimal profitMargin;

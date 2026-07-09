@@ -37,7 +37,7 @@ public class InvoiceLineItem {
 
     private String productName;
 
-
+    private String hsnCode;
 
     @Column(
             precision = 12,

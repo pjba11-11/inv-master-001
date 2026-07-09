@@ -135,6 +135,7 @@ CREATE TABLE products
     product_name VARCHAR(150) NOT NULL,
     description  TEXT,
     active       BOOLEAN   DEFAULT TRUE,
+    hsn_code      VARCHAR(30),
 
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -154,7 +155,6 @@ CREATE TABLE materials
 
     material_name VARCHAR(100) NOT NULL,
 
-    hsn_code      VARCHAR(30),
 
     unit          VARCHAR(20),
     current_price DECIMAL(12, 2),
@@ -258,9 +258,14 @@ CREATE TABLE invoices
 
     sgst           DECIMAL(12, 2) DEFAULT 0,
 
+    cgst_percentage       DECIMAL(5, 2),
+    sgst_percentage       DECIMAL(5, 2),
+
     discount       DECIMAL(12, 2) DEFAULT 0,
 
     grand_total    DECIMAL(12, 2) DEFAULT 0,
+
+    grand_total_words    Text NOT NULL,
 
     status         VARCHAR(30)    DEFAULT 'GENERATED',
 
@@ -286,6 +291,8 @@ CREATE TABLE invoice_line_items
     product_id   BIGINT         NOT NULL,
 
     product_name VARCHAR(150)   NOT NULL,
+
+    hsn_code      VARCHAR(30),
 
     quantity     DECIMAL(12, 2) NOT NULL,
 
