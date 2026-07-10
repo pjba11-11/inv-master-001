@@ -1,0 +1,1 @@
+ALTER TABLE materials ALTER COLUMN product_id DROP NOT NULL;

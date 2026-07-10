@@ -1,15 +1,20 @@
 package com.inv.invmaster001.service;
 
 import com.inv.invmaster001.dto.request.invoice.CreateInvoiceRequest;
+import com.inv.invmaster001.dto.request.invoice.CreatePaymentRequest;
 import com.inv.invmaster001.dto.request.invoice.InvoiceItemRequest;
+import com.inv.invmaster001.dto.request.invoice.UpdateInvoiceRequest;
 import com.inv.invmaster001.dto.response.invoice.InvoiceLineItemResponse;
+import com.inv.invmaster001.dto.response.invoice.InvoiceListResponse;
 import com.inv.invmaster001.dto.response.invoice.InvoicePdfResponse;
 import com.inv.invmaster001.dto.response.invoice.InvoiceResponse;
+import com.inv.invmaster001.dto.response.invoice.PaymentResponse;
 import com.inv.invmaster001.entity.Company;
 import com.inv.invmaster001.entity.Customer;
 import com.inv.invmaster001.entity.Invoice;
 import com.inv.invmaster001.entity.InvoiceLineItem;
 import com.inv.invmaster001.entity.InvoiceSequence;
+import com.inv.invmaster001.entity.Payment;
 import com.inv.invmaster001.entity.Product;
 import com.inv.invmaster001.entity.ProductPriceHistory;
 import com.inv.invmaster001.entity.Settings;
@@ -18,6 +23,7 @@ import com.inv.invmaster001.exception.ProductNotFoundException;
 import com.inv.invmaster001.repository.CustomerRepository;
 import com.inv.invmaster001.repository.InvoiceRepository;
 import com.inv.invmaster001.repository.InvoiceSequenceRepository;
+import com.inv.invmaster001.repository.PaymentRepository;
 import com.inv.invmaster001.repository.ProductPriceHistoryRepository;
 import com.inv.invmaster001.repository.ProductRepository;
 import com.inv.invmaster001.repository.SettingsRepository;
@@ -31,8 +37,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +60,8 @@ public class InvoiceService {
     private final CustomerRepository customerRepository;
 
     private final InvoiceDocumentService invoiceDocumentService;
+
+    private final PaymentRepository paymentRepository;
 
     private final UserRepository userRepository;
 
@@ -380,6 +390,190 @@ public class InvoiceService {
                 invoiceId
         );
     }
+    // =========================================================
+    // GET ALL INVOICES
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public List<InvoiceListResponse> getAllInvoices(Long companyId) {
+
+        return invoiceRepository
+                .findByCompanyIdAndDeletedAtIsNullOrderByInvoiceDateDesc(companyId)
+                .stream()
+                .map(inv -> {
+                    String customerName = customerRepository
+                            .findByIdAndCompanyIdAndDeletedAtIsNull(inv.getCustomerId(), companyId)
+                            .map(c -> c.getCustomerName())
+                            .orElse("Unknown");
+
+                    return InvoiceListResponse.builder()
+                            .invoiceId(inv.getId())
+                            .invoiceNumber(inv.getInvoiceNumber())
+                            .invoiceDate(inv.getInvoiceDate())
+                            .customerId(inv.getCustomerId())
+                            .customerName(customerName)
+                            .poNumber(inv.getPoNumber())
+                            .grandTotal(inv.getGrandTotal())
+                            .status(inv.getStatus())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    // =========================================================
+    // GET INVOICE BY ID
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public InvoiceResponse getInvoiceById(Long invoiceId, Long companyId) {
+
+        Invoice invoice = invoiceRepository
+                .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        List<InvoiceLineItemResponse> items = invoice.getInvoiceLineItems()
+                .stream()
+                .map(li -> InvoiceLineItemResponse.builder()
+                        .productId(li.getProductId())
+                        .productName(li.getProductName())
+                        .hsnCode(li.getHsnCode())
+                        .quantity(li.getQuantity())
+                        .unitPrice(li.getUnitPrice())
+                        .totalPrice(li.getQuantity().multiply(li.getUnitPrice()))
+                        .build())
+                .collect(Collectors.toList());
+
+        return InvoiceResponse.builder()
+                .invoiceId(invoice.getId())
+                .invoiceNumber(invoice.getInvoiceNumber())
+                .invoiceDate(invoice.getInvoiceDate())
+                .subtotal(invoice.getSubtotal())
+                .cgst(invoice.getCgst())
+                .sgst(invoice.getSgst())
+                .cgstPercentage(invoice.getCgstPercentage())
+                .sgstPercentage(invoice.getSgstPercentage())
+                .discount(invoice.getDiscount())
+                .grandTotal(invoice.getGrandTotal())
+                .status(invoice.getStatus())
+                .items(items)
+                .build();
+    }
+
+    // =========================================================
+    // UPDATE INVOICE
+    // =========================================================
+
+    public InvoiceResponse updateInvoice(Long invoiceId, UpdateInvoiceRequest request, Long companyId) {
+
+        Invoice invoice = invoiceRepository
+                .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        if (request.getStatus() != null) invoice.setStatus(request.getStatus());
+        if (request.getRemarks() != null) invoice.setRemarks(request.getRemarks());
+
+        invoiceRepository.save(invoice);
+
+        return getInvoiceById(invoiceId, companyId);
+    }
+
+    // =========================================================
+    // GET PAYMENTS
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public List<PaymentResponse> getPayments(Long invoiceId, Long companyId) {
+
+        invoiceRepository
+                .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        return paymentRepository.findByInvoiceId(invoiceId)
+                .stream()
+                .map(p -> PaymentResponse.builder()
+                        .id(p.getId())
+                        .invoiceId(invoiceId)
+                        .paymentDate(p.getPaymentDate())
+                        .amount(p.getAmount())
+                        .paymentMethod(p.getPaymentMethod())
+                        .transactionReference(p.getTransactionReference())
+                        .remarks(p.getRemarks())
+                        .createdAt(p.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // =========================================================
+    // ADD PAYMENT
+    // =========================================================
+
+    public PaymentResponse addPayment(Long invoiceId, CreatePaymentRequest request, Long companyId) {
+
+        Invoice invoice = invoiceRepository
+                .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        Payment payment = Payment.builder()
+                .invoice(invoice)
+                .paymentDate(request.getPaymentDate())
+                .amount(request.getAmount())
+                .paymentMethod(request.getPaymentMethod())
+                .transactionReference(request.getTransactionReference())
+                .remarks(request.getRemarks())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        Payment saved = paymentRepository.save(payment);
+
+        BigDecimal totalPaid = paymentRepository.findByInvoiceId(invoiceId)
+                .stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalPaid.compareTo(invoice.getGrandTotal()) >= 0) {
+            invoice.setStatus("PAID");
+        } else {
+            invoice.setStatus("PARTIALLY_PAID");
+        }
+        invoiceRepository.save(invoice);
+
+        return PaymentResponse.builder()
+                .id(saved.getId())
+                .invoiceId(invoiceId)
+                .paymentDate(saved.getPaymentDate())
+                .amount(saved.getAmount())
+                .paymentMethod(saved.getPaymentMethod())
+                .transactionReference(saved.getTransactionReference())
+                .remarks(saved.getRemarks())
+                .createdAt(saved.getCreatedAt())
+                .build();
+    }
+
+    // =========================================================
+    // GET LINE ITEMS
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public List<InvoiceLineItemResponse> getLineItems(Long invoiceId, Long companyId) {
+
+        Invoice invoice = invoiceRepository
+                .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
+                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+
+        return invoice.getInvoiceLineItems()
+                .stream()
+                .map(li -> InvoiceLineItemResponse.builder()
+                        .productId(li.getProductId())
+                        .productName(li.getProductName())
+                        .hsnCode(li.getHsnCode())
+                        .quantity(li.getQuantity())
+                        .unitPrice(li.getUnitPrice())
+                        .totalPrice(li.getQuantity().multiply(li.getUnitPrice()))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public InvoicePdfResponse downloadPdf(
             Long invoiceId,

@@ -2,6 +2,7 @@ package com.inv.invmaster001.service;
 
 
 import com.inv.invmaster001.dto.request.company.UpdateCompanyRequest;
+import com.inv.invmaster001.dto.response.company.CompanyDetailResponse;
 import com.inv.invmaster001.dto.response.company.CompanyResponse;
 import com.inv.invmaster001.entity.Company;
 import com.inv.invmaster001.exception.CompanyNotFoundException;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.time.LocalDateTime;
 
@@ -27,6 +27,29 @@ public class CompanyService {
     private final CompanyRepository companyRepository;
 
 
+
+    // =========================================================
+    // GET COMPANY
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public CompanyDetailResponse getCompany(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
+        return CompanyDetailResponse.builder()
+                .id(company.getId())
+                .companyName(company.getCompanyName())
+                .gstNumber(company.getGstNumber())
+                .phone(company.getPhone())
+                .email(company.getEmail())
+                .address(company.getAddress())
+                .bankName(company.getBankName())
+                .accountNumber(company.getAccountNumber())
+                .ifsc(company.getIfsc())
+                .upiId(company.getUpiId())
+                .logoUrl(company.getLogo())
+                .build();
+    }
 
     // =========================================================
     // UPDATE COMPANY

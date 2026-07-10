@@ -44,8 +44,12 @@ public class Material {
     private Long id;
 
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
     private Product product;
 
 
@@ -61,6 +65,9 @@ public class Material {
 
 
 
+
+    @Column(name = "hsn_code", length = 20)
+    private String hsnCode;
 
     @Column(name = "unit", length = 20)
     private String unit;

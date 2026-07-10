@@ -42,7 +42,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return new RegisterCommonResponse("User registered successfully");
+        return new RegisterCommonResponse("User registered successfully", null);
     }
 
     //Register Company
@@ -65,8 +65,8 @@ public class AuthService {
                 .logo(request.getLogo())
                 .build();
 
-        companyRepository.save(company);
+        Company saved = companyRepository.save(company);
 
-        return new RegisterCommonResponse("Company registered successfully");
+        return new RegisterCommonResponse("Company registered successfully", saved.getId());
     }
 }
