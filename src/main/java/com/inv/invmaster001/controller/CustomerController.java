@@ -74,13 +74,6 @@ public class CustomerController {
     ) {
 
 
-        Long companyId =
-                currentUser.getUser()
-                        .getCompany()
-                        .getId();
-
-
-
         return ResponseEntity
 
                 .status(HttpStatus.CREATED)
@@ -88,7 +81,7 @@ public class CustomerController {
                 .body(
                         customerService.createCustomer(
                                 request,
-                                companyId
+                                currentUser.getUser()
                         )
                 );
 
@@ -97,6 +90,24 @@ public class CustomerController {
 
 
 
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','EMPLOYEE')")
+    public ResponseEntity<CustomerFullResponse> getById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        return ResponseEntity.ok(
+                customerService.getCustomerById(id, currentUser.getUser().getCompany().getId()));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        customerService.deleteCustomer(id, currentUser.getUser().getCompany().getId());
+        return ResponseEntity.noContent().build();
+    }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")

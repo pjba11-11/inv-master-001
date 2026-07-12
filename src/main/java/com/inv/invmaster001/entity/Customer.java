@@ -84,6 +84,10 @@ public class Customer {
     private String address;
 
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy;
+
     @Column(
             name = "bank_name",
             length = 100

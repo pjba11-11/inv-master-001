@@ -58,16 +58,10 @@ public class ProductController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
 
-        Long companyId =
-                currentUser.getUser()
-                        .getCompany()
-                        .getId();
-
-
         ProductResponse response =
                 productService.createProduct(
                         request,
-                        companyId
+                        currentUser.getUser()
                 );
 
 

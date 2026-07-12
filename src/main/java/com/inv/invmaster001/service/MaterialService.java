@@ -48,6 +48,7 @@ public class MaterialService {
                 .hsnCode(request.getHsnCode())
                 .currentPrice(request.getCurrentPrice())
                 .active(request.getActive() != null ? request.getActive() : true)
+                .createdBy(currentUser)
                 .build();
         return toResponse(materialRepository.save(material));
     }
@@ -77,8 +78,6 @@ public class MaterialService {
     private MaterialResponse toResponse(Material m) {
         return MaterialResponse.builder()
                 .id(m.getId())
-                .productId(m.getProduct() != null ? m.getProduct().getId() : null)
-                .productName(m.getProduct() != null ? m.getProduct().getProductName() : null)
                 .materialName(m.getMaterialName())
                 .unit(m.getUnit())
                 .hsnCode(m.getHsnCode())
@@ -86,6 +85,7 @@ public class MaterialService {
                 .active(m.getActive())
                 .createdAt(m.getCreatedAt())
                 .updatedAt(m.getUpdatedAt())
+                .createdByName(m.getCreatedBy() != null ? m.getCreatedBy().getName() : null)
                 .build();
     }
 }

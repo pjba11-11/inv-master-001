@@ -38,6 +38,7 @@ public class InvoiceResponse {
     private BigDecimal grandTotal;
 
     private String status;
+    private String createdByName;
 
     private List<InvoiceLineItemResponse> items;
 

@@ -25,4 +25,5 @@ public class ProductFullResponse {
     private BigDecimal profitMargin;
 
     private List<MaterialResponse> materials;
+    private String createdByName;
 }

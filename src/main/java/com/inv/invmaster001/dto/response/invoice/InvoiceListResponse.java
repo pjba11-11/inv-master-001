@@ -24,4 +24,5 @@ public class InvoiceListResponse {
     private String poNumber;
     private BigDecimal grandTotal;
     private String status;
+    private String createdByName;
 }

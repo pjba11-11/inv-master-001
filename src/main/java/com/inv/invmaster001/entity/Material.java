@@ -48,11 +48,6 @@ public class Material {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
-
-
     @OneToMany(
             mappedBy = "material",
             cascade = CascadeType.ALL
@@ -79,6 +74,10 @@ public class Material {
 
     @Column(name = "active", nullable = false)
     private Boolean active = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy;
 
 
     @Column(name = "created_at", nullable = false, updatable = false)
