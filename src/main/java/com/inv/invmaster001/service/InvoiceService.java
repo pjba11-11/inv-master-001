@@ -105,8 +105,7 @@ public class InvoiceService {
                         .findByCompanyIdAndDeletedAtIsNull(
                                 company.getId()
                         )
-                        .orElseThrow(() ->
-                                new RuntimeException("Settings not found"));
+                        .orElse(null);
 
         // =====================================================
         // CREATE INVOICE ENTITY
@@ -197,12 +196,12 @@ public class InvoiceService {
         // =====================================================
 
         BigDecimal cgstPercentage =
-                settings.getCgstPercentage() == null
+                (settings == null || settings.getCgstPercentage() == null)
                         ? BigDecimal.ZERO
                         : settings.getCgstPercentage();
 
         BigDecimal sgstPercentage =
-                settings.getSgstPercentage() == null
+                (settings == null || settings.getSgstPercentage() == null)
                         ? BigDecimal.ZERO
                         : settings.getSgstPercentage();
 
@@ -252,7 +251,7 @@ public class InvoiceService {
         String invoiceNumber =
                 generateInvoiceNumber(
                         company.getId(),
-                        settings.getInvoicePrefix(),
+                        settings != null ? settings.getInvoicePrefix() : null,
                         savedInvoice.getId()
                 );
 
@@ -415,6 +414,7 @@ public class InvoiceService {
                             .poNumber(inv.getPoNumber())
                             .grandTotal(inv.getGrandTotal())
                             .status(inv.getStatus())
+                            .createdByName(inv.getCreatedBy() != null ? inv.getCreatedBy().getName() : null)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -455,6 +455,7 @@ public class InvoiceService {
                 .discount(invoice.getDiscount())
                 .grandTotal(invoice.getGrandTotal())
                 .status(invoice.getStatus())
+                .createdByName(invoice.getCreatedBy() != null ? invoice.getCreatedBy().getName() : null)
                 .items(items)
                 .build();
     }

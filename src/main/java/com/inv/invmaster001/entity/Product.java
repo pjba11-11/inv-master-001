@@ -8,6 +8,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
@@ -42,9 +44,11 @@ public class Product {
     private Company company;
 
 
-    @OneToMany(
-            mappedBy = "product",
-            cascade = CascadeType.ALL
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "product_materials",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "material_id")
     )
     private List<Material> materials = new ArrayList<>();
 
@@ -65,6 +69,10 @@ public class Product {
 
     private Boolean active = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private User createdBy;
+
     @Column(name = "hsn_code", length = 20)
     private String hsnCode;
 
@@ -81,14 +89,6 @@ public class Product {
     // ============================
     // HELPERS
     // ============================
-
-    public void addMaterial(Material material) {
-
-        materials.add(material);
-        material.setProduct(this);
-
-    }
-
 
     public void addPriceHistory(ProductPriceHistory history) {
 

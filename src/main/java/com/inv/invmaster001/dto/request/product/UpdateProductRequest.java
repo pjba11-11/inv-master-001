@@ -1,7 +1,6 @@
 package com.inv.invmaster001.dto.request.product;
 
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -37,7 +36,6 @@ public class UpdateProductRequest {
 
     private String hsnCode;
 
-    @Valid
     @NotEmpty
-    private List<MaterialRequest> materials;
+    private List<Long> materialIds;
 }

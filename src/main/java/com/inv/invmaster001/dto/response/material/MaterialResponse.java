@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
 public class MaterialResponse {
 
     private Long id;
-    private Long productId;
-    private String productName;
     private String materialName;
     private String unit;
     private String hsnCode;
@@ -26,4 +24,5 @@ public class MaterialResponse {
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String createdByName;
 }
