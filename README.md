@@ -1,6 +1,6 @@
 # inv-master-001
 
-Spring Boot backend for the Invoice Master application.
+Spring Boot backend for the Invoice Master application — multi-tenant invoicing with role-based access control, audit trails, and PDF generation.
 
 ## Stack
 
@@ -9,9 +9,10 @@ Spring Boot backend for the Invoice Master application.
 | Framework | Spring Boot 3.3.2 |
 | Language | Java 17 |
 | Database | PostgreSQL 16 |
-| Migrations | Flyway |
-| Auth | JWT (access + refresh tokens) |
+| Migrations | Flyway (single consolidated `V1`) |
+| Auth | JWT (access + refresh tokens), Spring Security `@PreAuthorize` |
 | ORM | Spring Data JPA / Hibernate |
+| PDF | openhtmltopdf + Thymeleaf template |
 
 ## Getting Started
 
@@ -32,7 +33,7 @@ This starts a PostgreSQL 16 instance on port `5432` with:
 ./mvnw spring-boot:run
 ```
 
-Flyway will automatically apply the migration at `src/main/resources/db/migration/V1__create_all_basic_tables.sql` on first run.
+Flyway applies `src/main/resources/db/migration/V1__create_all_basic_tables.sql` on first run — the complete schema lives in this single migration (pre-MVP convention; existing databases should be dropped and recreated when it changes).
 
 The API is available at `http://localhost:8080`.
 
@@ -40,49 +41,84 @@ The API is available at `http://localhost:8080`.
 
 ```
 companies
-  └── users           (company_id FK, role: ADMIN | MANAGER | SALES)
-  └── settings        (1-to-1: gstPercentage, cgstPercentage, sgstPercentage, currency, invoicePrefix, financialYear)
-  └── customers       (customerName, billingAddress, shippingAddress, gstNumber)
-  └── materials       (materialName, unit, currentPrice, active)
-  │     └── material_price_history  (price, effectiveFrom, effectiveTo)
-  └── products        (productName, description, active)
-  │     └── product_materials       (material_id FK, quantity)
-  │     └── product_price_history   (manufacturingCost, sellingPrice, profitMargin)
+  └── users           (company_id FK, role: ADMIN | MANAGER | EMPLOYEE)
+  └── settings        (1-to-1: cgst/sgst percentages, currency, invoicePrefix, financialYear, vehicleNumbers)
+  └── customers       (customerName, address, gstNumber, bank details, created_by_user_id)
+  └── materials       (materialName, unit, currentPrice, hsnCode, created_by_user_id)
+  │     └── material_price_history   (price, effectiveFrom, effectiveTo)
+  └── products        (productName, description, hsnCode, active, created_by_user_id)
+  │     └── product_materials        (many-to-many join to materials)
+  │     └── product_price_history    (manufacturingCost, labourCharges, sellingPrice, profitMargin)
   └── invoice_sequences
-  └── invoices        (invoiceNumber, customerId FK, status, subtotal, gst, discount, grandTotal, remarks)
-        └── invoice_line_items  (productId FK, productName, quantity, unitPrice, total)
-        └── payments            (paymentDate, amount, paymentMethod, transactionReference, remarks)
+  └── invoices        (invoiceNumber, customer, created_by, status, subtotal, cgst, sgst, discount, grandTotal, grandTotalWords)
+        └── invoice_line_items  (productId, productName, hsnCode, quantity, unitPrice)
+        └── payments            (paymentDate, amount, paymentMethod, transactionReference)
 ```
+
+Every business entity carries a `created_by` audit reference; responses expose it as `createdByName`.
 
 ## API Endpoints
 
+All endpoints except `/auth/**` require a JWT. Roles: **ADMIN**, **MANAGER**, **EMPLOYEE**.
+
 ### Auth — `/auth`
-
-| Method | Path | Body | Description |
-|---|---|---|---|
-| POST | `/auth/login` | `{ email, password }` | Returns `{ accessToken, refreshToken }` |
-| POST | `/auth/refresh` | `{ refreshToken }` | Rotate tokens |
-| POST | `/auth/company/register` | `RegisterCompanyRequest` | Create a new company |
-| POST | `/auth/user/register` | `RegisterUserRequest` | Add a user to a company |
-
-### Products — `/products` (JWT required)
-
-| Method | Path | Role | Description |
-|---|---|---|---|
-| GET | `/products` | ADMIN, MANAGER, EMPLOYEE | List all products for the authenticated company |
-| POST | `/products` | ADMIN, MANAGER | Create product with materials |
-| PUT | `/products/{id}` | ADMIN, MANAGER | Update product |
-| DELETE | `/products/{id}` | ADMIN | Soft delete product |
-
-### Settings — `/settings` (JWT required)
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/settings` | Create settings for a company |
-| GET | `/settings` | Get settings for the authenticated company |
-| PUT | `/settings` | Update settings |
+| POST | `/auth/login` | Returns `{ accessToken, refreshToken }` |
+| POST | `/auth/refresh` | Rotate tokens |
+| POST | `/auth/company/register` | Create a new company + first admin |
+| POST | `/auth/user/register` | Add a user to a company |
 
-## Invoice Status Enum
+### Materials — `/materials`
+
+| Method | Path | Role |
+|---|---|---|
+| GET | `/materials`, `/materials/{id}` | any |
+| POST / PUT / DELETE | `/materials`, `/materials/{id}` | ADMIN, MANAGER |
+
+### Products — `/products`
+
+| Method | Path | Role |
+|---|---|---|
+| GET | `/products`, `/products/{id}` | any |
+| POST / PUT | `/products`, `/products/{id}` | ADMIN, MANAGER |
+| DELETE | `/products/{id}` | ADMIN |
+
+### Customers — `/customers`
+
+| Method | Path | Role |
+|---|---|---|
+| GET | `/customers`, `/customers/{id}` | any |
+| POST / PUT / DELETE | `/customers`, `/customers/{id}` | ADMIN, MANAGER |
+
+### Invoices — `/invoices`
+
+| Method | Path | Role | Description |
+|---|---|---|---|
+| GET | `/invoices` | any | List (includes `customerName`, `createdByName`) |
+| GET | `/invoices/{id}` | any | Detail with line items |
+| POST | `/invoices` | ADMIN, MANAGER | Create — prices resolved server-side from product price history; taxes from company settings |
+| PUT | `/invoices/{id}` | ADMIN, MANAGER | Update status / remarks |
+| GET | `/invoices/{id}/line-items` | any | Line items |
+| GET / POST | `/invoices/{id}/payments` | any / ADMIN, MANAGER | Payments; status auto-advances to `PARTIALLY_PAID` / `PAID` |
+| GET | `/invoices/{id}/pdf` | ADMIN, MANAGER | Download tax invoice PDF |
+
+### Company & Settings
+
+| Method | Path | Description |
+|---|---|---|
+| GET / PUT / DELETE | `/company` | Company profile of the authenticated user |
+| GET / POST / PUT / DELETE | `/api/company/settings` | Tax + invoice settings |
+
+### User Management — `/admin/users` (ADMIN only)
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/admin/users` | List users in the admin's company |
+| POST | `/admin/users` | Create user `{ name, email, password, role }` — company inherited from the admin, password BCrypt-hashed |
+
+## Invoice Status
 
 ```
 GENERATED → PARTIALLY_PAID → PAID
@@ -93,9 +129,13 @@ GENERATED → PARTIALLY_PAID → PAID
 
 | Role | Permissions |
 |---|---|
-| ADMIN | Full access including delete |
-| MANAGER | Create and update; no delete |
-| SALES | Read only |
+| ADMIN | Full access: all writes, product delete, user management |
+| MANAGER | Create, update, delete (except products); no user management |
+| EMPLOYEE | Read only |
+
+## Multi-tenancy
+
+Every query is scoped by the company on the JWT principal — company IDs are never accepted from request bodies, so cross-company access is not possible.
 
 ## Frontend
 
