@@ -175,8 +175,8 @@ CREATE TABLE invoice_sequences
     invoice_id     BIGINT NOT NULL,
     invoice_number VARCHAR(50),
     invoice_date   DATE   NOT NULL,
-    request_json   JSONB,
-    response_json  JSONB,
+    request_json   JSONB NOT NULL,
+    response_json  JSONB NOT NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at     TIMESTAMP
