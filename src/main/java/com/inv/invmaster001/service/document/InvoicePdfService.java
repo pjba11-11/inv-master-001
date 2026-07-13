@@ -8,10 +8,14 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.io.ByteArrayOutputStream;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
 public class InvoicePdfService {
+
+    private static final DateTimeFormatter INVOICE_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("dd MMM yyyy");
 
     private final TemplateEngine templateEngine;
 
@@ -97,7 +101,9 @@ public class InvoicePdfService {
 
         context.setVariable(
                 "invoiceDate",
-                data.getInvoiceDate()
+                data.getInvoiceDate() != null
+                        ? data.getInvoiceDate().format(INVOICE_DATE_FORMAT)
+                        : null
         );
 
         context.setVariable(
