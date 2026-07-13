@@ -1,4 +1,4 @@
-package com.inv.invmaster001.service;
+package com.inv.invmaster001.service.dashboard;
 
 import com.inv.invmaster001.dto.response.dashboard.DashboardPeriod;
 import com.inv.invmaster001.dto.response.dashboard.DashboardPeriodResponse;

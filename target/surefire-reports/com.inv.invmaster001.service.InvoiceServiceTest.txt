@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.inv.invmaster001.service.InvoiceServiceTest
--------------------------------------------------------------------------------
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.148 s -- in com.inv.invmaster001.service.InvoiceServiceTest

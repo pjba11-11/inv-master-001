@@ -1,6 +1,0 @@
-com/inv/invmaster001/service/UserServiceTest.class
-com/inv/invmaster001/util/NumberToWordsUtilTest.class
-com/inv/invmaster001/controller/UserControllerTest.class
-com/inv/invmaster001/service/InvoiceServiceTest.class
-com/inv/invmaster001/service/AuthServiceTest.class
-com/inv/invmaster001/service/JwtServiceTest.class
