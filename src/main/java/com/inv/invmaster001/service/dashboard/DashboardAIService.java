@@ -4,19 +4,74 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inv.invmaster001.dto.response.dashboard.DashboardAIResponse;
 import com.inv.invmaster001.dto.response.dashboard.DashboardResponse;
+import com.inv.invmaster001.entity.AnalyticsCache;
+import com.inv.invmaster001.entity.Company;
+import com.inv.invmaster001.repository.AnalyticsCacheRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
 public class DashboardAIService {
 
+    private static final String ANALYSIS_TYPE = "DASHBOARD_AI";
+    private static final long CACHE_TTL_MINUTES = 30;
+
     private final ChatClient chatClient;
     private final ObjectMapper objectMapper;
+    private final AnalyticsCacheRepository analyticsCacheRepository;
 
     public DashboardAIResponse generateInsights(
-            DashboardResponse dashboardResponse) {
+            DashboardResponse dashboardResponse,
+            Company company) {
+
+        AnalyticsCache cache =
+                analyticsCacheRepository
+                        .findByCompanyIdAndAnalysisType(company.getId(), ANALYSIS_TYPE)
+                        .orElse(null);
+
+        if (cache != null
+                && cache.getAnalysisJson() != null
+                && cache.getUpdatedAt() != null
+                && ChronoUnit.MINUTES.between(cache.getUpdatedAt(), LocalDateTime.now()) < CACHE_TTL_MINUTES) {
+
+            try {
+                return objectMapper.readValue(cache.getAnalysisJson(), DashboardAIResponse.class);
+            } catch (JsonProcessingException e) {
+                // Fall through and regenerate if the cached payload is somehow unreadable.
+            }
+        }
+
+        DashboardAIResponse response = callModel(dashboardResponse);
+
+        try {
+            String responseJson = objectMapper.writeValueAsString(response);
+
+            AnalyticsCache toSave = cache != null ? cache : AnalyticsCache.builder()
+                    .company(company)
+                    .analysisType(ANALYSIS_TYPE)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            toSave.setAnalysisJson(responseJson);
+            toSave.setPeriodStart(LocalDate.now());
+            toSave.setPeriodEnd(LocalDate.now());
+            toSave.setUpdatedAt(LocalDateTime.now());
+
+            analyticsCacheRepository.save(toSave);
+        } catch (JsonProcessingException e) {
+            // Insights already computed; a cache-write failure shouldn't fail the request.
+        }
+
+        return response;
+    }
+
+    private DashboardAIResponse callModel(DashboardResponse dashboardResponse) {
 
         try {
 

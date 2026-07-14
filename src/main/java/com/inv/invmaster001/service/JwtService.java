@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -15,8 +16,11 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    // TODO: move to application.properties
-    private final String SECRET =
+    // Overridable via the JWT_SECRET env var; this default only applies when
+    // Spring isn't managing the bean (e.g. `new JwtService()` in tests) or
+    // when the property/env var is unset.
+    @Value("${jwt.secret:bWktc2VjcmV0LWtleS1mb3Itand0LWF1dGgtc3lzdGVtLTIwMjY=}")
+    private String SECRET =
             "bWktc2VjcmV0LWtleS1mb3Itand0LWF1dGgtc3lzdGVtLTIwMjY=";
 
     private final long accessExpiration = 1000 * 60 * 15; // 15 min

@@ -12,11 +12,26 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    ignore-missing-migrations: true
+
+  http:
+    client:
+      connect-timeout: 10s
+      read-timeout: 30s
 
   ai:
+    retry:
+      max-attempts: 2
+      backoff:
+        initial-interval: 1s
+        multiplier: 2
+        max-interval: 5s
     openai:
       api-key: ${GROQ_API_KEY}
       base-url: https://api.groq.com/openai
       chat:
         options:
           model: llama-3.3-70b-versatile
+
+jwt:
+  secret: ${JWT_SECRET:bWktc2VjcmV0LWtleS1mb3Itand0LWF1dGgtc3lzdGVtLTIwMjY=}

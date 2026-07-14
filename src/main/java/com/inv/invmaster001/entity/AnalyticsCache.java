@@ -15,6 +15,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,6 +52,7 @@ public class AnalyticsCache {
     @Column(name = "period_end")
     private LocalDate periodEnd;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "analysis_json", columnDefinition = "JSONB")
     private String analysisJson;
 
