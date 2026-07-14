@@ -1,0 +1,477 @@
+type: collection.insomnia.rest/5.0
+name: Invoice Master API
+meta:
+  id: wrk_invmaster001
+  description: Spring Boot backend — RBAC, audit trail, invoices + PDF
+collection:
+  - name: Auth
+    meta:
+      id: fld_auth
+    children:
+      - name: Login
+        meta:
+          id: req_login
+        method: POST
+        url: "{{ _.base_url }}/auth/login"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "admin@example.com",
+              "password": "secret123"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+      - name: Refresh Token
+        meta:
+          id: req_refresh
+        method: POST
+        url: "{{ _.base_url }}/auth/refresh"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "refreshToken": "{{ _.refresh_token }}"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+      - name: Register Company
+        meta:
+          id: req_register_company
+        method: POST
+        url: "{{ _.base_url }}/auth/company/register"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "companyName": "Acme Industries Pvt Ltd",
+              "gstNumber": "29ABCDE1234F1Z5",
+              "phone": "+91 98450 12345",
+              "email": "billing@acme.in",
+              "address": "42 Industrial Estate, Bengaluru 560058",
+              "bankName": "HDFC Bank",
+              "accountNumber": "50200012345678",
+              "ifsc": "HDFC0001234",
+              "upiId": "acme@hdfcbank",
+              "logo": null
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+      - name: Register User
+        meta:
+          id: req_register_user
+        method: POST
+        url: "{{ _.base_url }}/auth/user/register"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "companyId": 1,
+              "name": "Jane Smith",
+              "email": "jane@acme.in",
+              "password": "secret123",
+              "role": "MANAGER"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+  - name: Materials
+    meta:
+      id: fld_materials
+    children:
+      - name: List Materials
+        meta:
+          id: req_materials_list
+        method: GET
+        url: "{{ _.base_url }}/materials"
+        authentication: &bearer
+          type: bearer
+          token: "{{ _.access_token }}"
+      - name: Get Material
+        meta:
+          id: req_materials_get
+        method: GET
+        url: "{{ _.base_url }}/materials/1"
+        authentication: *bearer
+      - name: Create Material (ADMIN/MANAGER)
+        meta:
+          id: req_materials_create
+        method: POST
+        url: "{{ _.base_url }}/materials"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "materialName": "Kraft Paper Roll",
+              "unit": "kg",
+              "hsnCode": "4804",
+              "currentPrice": 55.00,
+              "active": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Update Material (ADMIN/MANAGER)
+        meta:
+          id: req_materials_update
+        method: PUT
+        url: "{{ _.base_url }}/materials/1"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "materialName": "Kraft Paper Roll",
+              "unit": "kg",
+              "hsnCode": "4804",
+              "currentPrice": 58.50,
+              "active": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Delete Material (ADMIN/MANAGER)
+        meta:
+          id: req_materials_delete
+        method: DELETE
+        url: "{{ _.base_url }}/materials/1"
+        authentication: *bearer
+  - name: Products
+    meta:
+      id: fld_products
+    children:
+      - name: List Products
+        meta:
+          id: req_products_list
+        method: GET
+        url: "{{ _.base_url }}/products"
+        authentication: *bearer
+      - name: Get Product
+        meta:
+          id: req_products_get
+        method: GET
+        url: "{{ _.base_url }}/products/1"
+        authentication: *bearer
+      - name: Create Product (ADMIN/MANAGER)
+        meta:
+          id: req_products_create
+        method: POST
+        url: "{{ _.base_url }}/products"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "productName": "Corrugated Box 12x10x8",
+              "description": "3-ply corrugated shipping box",
+              "labourCharges": 5.00,
+              "profitMargin": 20,
+              "hsnCode": "4819",
+              "materialIds": [1, 2]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Update Product (ADMIN/MANAGER)
+        meta:
+          id: req_products_update
+        method: PUT
+        url: "{{ _.base_url }}/products/1"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "productName": "Corrugated Box 12x10x8",
+              "description": "3-ply corrugated shipping box",
+              "labourCharges": 6.00,
+              "profitMargin": 22,
+              "hsnCode": "4819",
+              "materialIds": [1, 2]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Delete Product (ADMIN only)
+        meta:
+          id: req_products_delete
+        method: DELETE
+        url: "{{ _.base_url }}/products/1"
+        authentication: *bearer
+  - name: Customers
+    meta:
+      id: fld_customers
+    children:
+      - name: List Customers
+        meta:
+          id: req_customers_list
+        method: GET
+        url: "{{ _.base_url }}/customers"
+        authentication: *bearer
+      - name: Get Customer
+        meta:
+          id: req_customers_get
+        method: GET
+        url: "{{ _.base_url }}/customers/1"
+        authentication: *bearer
+      - name: Create Customer (ADMIN/MANAGER)
+        meta:
+          id: req_customers_create
+        method: POST
+        url: "{{ _.base_url }}/customers"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "customerName": "Sharma Traders",
+              "gstNumber": "29XYZAB5678K1Z9",
+              "phone": "+91 99000 54321",
+              "email": "accounts@sharmatraders.in",
+              "address": "18 Market Road, Bengaluru 560041",
+              "bankName": "SBI",
+              "accountNumber": "30123456789",
+              "ifsc": "SBIN0004321",
+              "upiId": "sharma@sbi"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Update Customer (ADMIN/MANAGER)
+        meta:
+          id: req_customers_update
+        method: PUT
+        url: "{{ _.base_url }}/customers/1"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "customerName": "Sharma Traders",
+              "phone": "+91 99000 54321",
+              "email": "accounts@sharmatraders.in",
+              "address": "18 Market Road, Bengaluru 560041"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Delete Customer (ADMIN/MANAGER)
+        meta:
+          id: req_customers_delete
+        method: DELETE
+        url: "{{ _.base_url }}/customers/1"
+        authentication: *bearer
+  - name: Invoices
+    meta:
+      id: fld_invoices
+    children:
+      - name: List Invoices
+        meta:
+          id: req_invoices_list
+        method: GET
+        url: "{{ _.base_url }}/invoices"
+        authentication: *bearer
+      - name: Get Invoice
+        meta:
+          id: req_invoices_get
+        method: GET
+        url: "{{ _.base_url }}/invoices/1"
+        authentication: *bearer
+      - name: Create Invoice (ADMIN/MANAGER)
+        meta:
+          id: req_invoices_create
+          description: Prices resolved server-side from product price history; CGST/SGST from company settings
+        method: POST
+        url: "{{ _.base_url }}/invoices"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "customerId": 1,
+              "poNumber": "PO-2026-118",
+              "items": [
+                { "productId": 1, "quantity": 150 },
+                { "productId": 2, "quantity": 12 }
+              ],
+              "discount": 500.00,
+              "remarks": "Delivery within 7 working days"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Update Invoice Status (ADMIN/MANAGER)
+        meta:
+          id: req_invoices_update
+        method: PUT
+        url: "{{ _.base_url }}/invoices/1"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "status": "CANCELLED",
+              "remarks": "Cancelled at customer request"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Get Line Items
+        meta:
+          id: req_invoices_lineitems
+        method: GET
+        url: "{{ _.base_url }}/invoices/1/line-items"
+        authentication: *bearer
+      - name: List Payments
+        meta:
+          id: req_invoices_payments_list
+        method: GET
+        url: "{{ _.base_url }}/invoices/1/payments"
+        authentication: *bearer
+      - name: Add Payment (ADMIN/MANAGER)
+        meta:
+          id: req_invoices_payments_add
+          description: Status auto-advances to PARTIALLY_PAID / PAID
+        method: POST
+        url: "{{ _.base_url }}/invoices/1/payments"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "paymentDate": "2026-07-13",
+              "amount": 15000.00,
+              "paymentMethod": "UPI",
+              "transactionReference": "UPI123456789",
+              "remarks": "Advance payment"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Download PDF (ADMIN/MANAGER)
+        meta:
+          id: req_invoices_pdf
+        method: GET
+        url: "{{ _.base_url }}/invoices/1/pdf"
+        authentication: *bearer
+  - name: Company & Settings
+    meta:
+      id: fld_company
+    children:
+      - name: Get Company
+        meta:
+          id: req_company_get
+        method: GET
+        url: "{{ _.base_url }}/company"
+        authentication: *bearer
+      - name: Update Company
+        meta:
+          id: req_company_update
+        method: PUT
+        url: "{{ _.base_url }}/company"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "companyName": "Acme Industries Pvt Ltd",
+              "gstNumber": "29ABCDE1234F1Z5",
+              "phone": "+91 98450 12345",
+              "email": "billing@acme.in",
+              "address": "42 Industrial Estate, Bengaluru 560058",
+              "bankName": "HDFC Bank",
+              "accountNumber": "50200012345678",
+              "ifsc": "HDFC0001234",
+              "upiId": "acme@hdfcbank",
+              "logo": null
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Get Settings
+        meta:
+          id: req_settings_get
+        method: GET
+        url: "{{ _.base_url }}/api/company/settings"
+        authentication: *bearer
+      - name: Create Settings
+        meta:
+          id: req_settings_create
+        method: POST
+        url: "{{ _.base_url }}/api/company/settings"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "gstPercentage": 18,
+              "cgstPercentage": 9,
+              "sgstPercentage": 9,
+              "vehicleNumbers": ["KA01AB1234", "KA02CD5678"],
+              "defaultProfitMargin": 20,
+              "currency": "INR",
+              "invoicePrefix": "INV",
+              "financialYear": "2026-27"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+      - name: Update Settings
+        meta:
+          id: req_settings_update
+        method: PUT
+        url: "{{ _.base_url }}/api/company/settings"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "cgstPercentage": 9,
+              "sgstPercentage": 9,
+              "invoicePrefix": "INV",
+              "financialYear": "2026-27"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+  - name: Admin — User Management
+    meta:
+      id: fld_admin_users
+    children:
+      - name: List Team Users (ADMIN only)
+        meta:
+          id: req_admin_users_list
+        method: GET
+        url: "{{ _.base_url }}/admin/users"
+        authentication: *bearer
+      - name: Create User (ADMIN only)
+        meta:
+          id: req_admin_users_create
+          description: Company inherited from the admin's JWT; role is ADMIN | MANAGER | EMPLOYEE
+        method: POST
+        url: "{{ _.base_url }}/admin/users"
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Ravi Kumar",
+              "email": "ravi@acme.in",
+              "password": "secret123",
+              "role": "EMPLOYEE"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication: *bearer
+environments:
+  name: Base Environment
+  meta:
+    id: env_base
+  data:
+    base_url: http://localhost:8080
+    access_token: ""
+    refresh_token: ""

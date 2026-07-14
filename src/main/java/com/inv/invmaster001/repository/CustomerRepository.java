@@ -19,4 +19,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             Long id,
             Long companyId
     );
+
+    long countByCompanyIdAndDeletedAtIsNull(
+            Long companyId
+    );
 }

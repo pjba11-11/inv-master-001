@@ -265,7 +265,57 @@ public class InvoiceService {
 
         invoiceRepository.save(savedInvoice);
 
+ InvoiceResponse response=InvoiceResponse.builder()
 
+         .invoiceId(
+                 savedInvoice.getId()
+         )
+
+         .invoiceNumber(
+                 invoiceNumber
+         )
+
+         .invoiceDate(
+                 savedInvoice.getInvoiceDate()
+         )
+
+         .subtotal(
+                 subtotal
+         )
+
+         .cgst(
+                 cgst
+         )
+
+         .sgst(
+                 sgst
+         )
+         .cgstPercentage(
+                 cgstPercentage
+         )
+
+         .sgstPercentage(
+                 sgstPercentage
+         )
+
+
+         .discount(
+                 discount
+         )
+
+         .grandTotal(
+                 grandTotal
+         )
+
+         .status(
+                 savedInvoice.getStatus()
+         )
+
+         .items(
+                 itemResponses
+         )
+
+         .build();
         // =====================================================
         // SAVE SEQUENCE
         // =====================================================
@@ -287,6 +337,14 @@ public class InvoiceService {
                                 LocalDate.now()
                         )
 
+                        .requestJson(
+                                request
+                        )
+
+                        .responseJson(
+                                response
+                        )
+
                         .build();
 
 
@@ -297,57 +355,7 @@ public class InvoiceService {
         // RESPONSE
         // =====================================================
 
-        return InvoiceResponse.builder()
-
-                .invoiceId(
-                        savedInvoice.getId()
-                )
-
-                .invoiceNumber(
-                        invoiceNumber
-                )
-
-                .invoiceDate(
-                        savedInvoice.getInvoiceDate()
-                )
-
-                .subtotal(
-                        subtotal
-                )
-
-                .cgst(
-                        cgst
-                )
-
-                .sgst(
-                        sgst
-                )
-                .cgstPercentage(
-                        cgstPercentage
-                )
-
-                .sgstPercentage(
-                        sgstPercentage
-                )
-
-
-                .discount(
-                        discount
-                )
-
-                .grandTotal(
-                        grandTotal
-                )
-
-                .status(
-                        savedInvoice.getStatus()
-                )
-
-                .items(
-                        itemResponses
-                )
-
-                .build();
+        return response;
 
     }
 

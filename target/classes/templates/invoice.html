@@ -1,24 +1,22 @@
 <!DOCTYPE html>
-
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head>
-
     <meta charset="UTF-8"/>
-
     <title>Invoice</title>
-
     <style>
-
         @page {
             size: A4;
-            margin: 18mm 15mm 18mm 15mm;
+            margin: 15mm 14mm 18mm 14mm;
 
             @bottom-center {
                 content: "Page " counter(page) " of " counter(pages);
-                font-size: 10px;
-                color: #777777;
+                font-size: 9px;
+                color: #888888;
             }
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -27,11 +25,7 @@
             color: #333333;
             margin: 0;
             padding: 0;
-            line-height: 1.5;
-        }
-
-        * {
-            box-sizing: border-box;
+            line-height: 1.45;
         }
 
         table {
@@ -47,15 +41,11 @@
             text-align: right;
         }
 
-        .text-center {
-            text-align: center;
-        }
+        /* ---------- Company header ---------- */
 
         .company-header {
-            width: 100%;
             border-bottom: 3px solid #1f4e79;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+            padding-bottom: 12px;
         }
 
         .company-header td {
@@ -76,48 +66,66 @@
         }
 
         .company-name {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             color: #1f4e79;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
-        .company-details p {
-            margin: 3px 0;
+        /* ---------- Document title ---------- */
+
+        .doc-title {
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            color: #1f4e79;
+            letter-spacing: 3px;
+            margin: 12px 0 14px 0;
         }
 
-        .info-table {
-            margin-top: 10px;
-            margin-bottom: 20px;
+        /* ---------- Invoice + customer boxes ---------- */
+
+        .info-table td {
+            vertical-align: top;
+        }
+
+        .info-cell {
+            width: 48%;
+        }
+
+        .info-spacer {
+            width: 4%;
         }
 
         .info-box {
-            width: 48%;
             border: 1px solid #d5d5d5;
+            height: 100%;
         }
 
         .box-header {
             background: #1f4e79;
-            color: white;
-            padding: 8px;
+            color: #ffffff;
+            padding: 7px 10px;
             font-weight: bold;
             font-size: 12px;
         }
 
         .box-body {
-            padding: 10px;
+            padding: 9px 10px;
         }
 
         .box-body p {
-            margin: 5px 0;
+            margin: 4px 0;
         }
 
         .label {
             font-weight: bold;
         }
 
+        /* ---------- Line items ---------- */
+
         .items-table {
-            margin-top: 20px;
+            margin-top: 16px;
             page-break-inside: auto;
         }
 
@@ -132,127 +140,100 @@
 
         .items-table th {
             background: #1f4e79;
-            color: white;
-            border: 1px solid #cfcfcf;
-            padding: 9px;
+            color: #ffffff;
+            border: 1px solid #1f4e79;
+            padding: 8px;
             font-size: 11px;
             font-weight: bold;
         }
 
         .items-table td {
             border: 1px solid #d9d9d9;
-            padding: 8px;
+            padding: 7px 8px;
         }
 
         .items-table tbody tr:nth-child(even) {
             background: #f7f9fc;
         }
 
-        .serial {
-            width: 6%;
-            text-align: center;
-        }
+        .col-serial   { width: 6%;  text-align: center; }
+        .col-product  { width: 36%; }
+        .col-hsn      { width: 12%; text-align: center; }
+        .col-qty      { width: 10%; text-align: center; }
+        .col-rate     { width: 18%; text-align: right; }
+        .col-amount   { width: 18%; text-align: right; }
 
-        .product {
-            width: 32%;
-        }
-
-        .hsn {
-            width: 12%;
-            text-align: center;
-        }
-
-        .qty {
-            width: 10%;
-            text-align: center;
-        }
-
-        .rate {
-            width: 20%;
-            text-align: right;
-        }
-
-        .amount {
-            width: 20%;
-            text-align: right;
-        }
-
-        /* ================= SUMMARY ================= */
+        /* ---------- Summary (bank + totals) ---------- */
 
         .summary-table {
-            width: 100%;
-            margin-top: 25px;
-            border-collapse: collapse;
+            margin-top: 18px;
+            page-break-inside: avoid;
         }
 
         .summary-left {
-            width: 55%;
+            width: 52%;
             vertical-align: top;
-            padding-right: 25px;
+            padding-right: 20px;
         }
 
         .summary-right {
-            width: 45%;
+            width: 48%;
             vertical-align: top;
         }
 
         .section-heading {
             color: #1f4e79;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .bank-table {
-            width: 100%;
+            border-bottom: 1px solid #d9d9d9;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
         }
 
         .bank-table td {
-            padding: 5px 0;
+            padding: 3px 0;
         }
 
         .bank-label {
-            width: 170px;
+            width: 140px;
             font-weight: bold;
         }
 
-        .totals-table {
-            width: 100%;
-            border-collapse: collapse;
+        .remarks {
+            margin-top: 18px;
         }
 
         .totals-table td {
             border: 1px solid #d9d9d9;
-            padding: 8px 10px;
+            padding: 7px 10px;
         }
 
         .totals-table td:first-child {
             background: #f5f7fb;
             font-weight: bold;
-            width: 60%;
+            width: 55%;
         }
 
-        .grand-total td {
+        .totals-table tr.grand-total td,
+        .totals-table tr.grand-total td:first-child {
             background: #1f4e79;
-            color: #000000;
+            color: #ffffff;
             font-weight: bold;
             font-size: 13px;
+            border: 1px solid #1f4e79;
         }
 
         .amount-in-words td {
             background: #f8f9fc;
-            padding: 12px;
-            line-height: 1.6;
-            font-size: 11px;
+            padding: 10px;
+            line-height: 1.5;
         }
 
-        .remarks {
-            margin-top: 25px;
-        }
+        /* ---------- Signature + footer ---------- */
 
         .signature {
-            width: 100%;
-            margin-top: 40px;
+            margin-top: 30px;
+            page-break-inside: avoid;
         }
 
         .signature td {
@@ -265,372 +246,173 @@
         }
 
         .signature-line {
-            border-top: 1px solid #000;
-            padding-top: 8px;
-            margin-top: 45px;
+            border-top: 1px solid #000000;
+            padding-top: 6px;
+            margin-top: 40px;
             font-weight: bold;
         }
 
         .footer {
-            margin-top: 30px;
+            margin-top: 20px;
             text-align: center;
-            font-size: 10px;
-            color: #777777;
+            font-size: 9px;
+            color: #888888;
             border-top: 1px solid #dddddd;
-            padding-top: 8px;
+            padding-top: 6px;
         }
-
     </style>
-
 </head>
-
 <body>
 
-<!-- =======================================================
-     COMPANY HEADER
-======================================================= -->
-
+<!-- Company header -->
 <table class="company-header">
-
     <tr>
-
         <td class="logo">
-
-            <img
-                    th:if="${logo != null}"
-                    th:src="${logo}"
-                    alt="Logo"/>
-
+            <img th:if="${logo != null}" th:src="${logo}" alt="Logo"/>
         </td>
-
         <td class="company-details">
-
-            <div class="company-name"
-                 th:text="${companyName}">
-                COMPANY NAME
-            </div>
-
+            <div class="company-name" th:text="${companyName}">COMPANY NAME</div>
             <p th:text="${companyAddress}"></p>
-
-            <p>
-                <strong>Phone :</strong>
-                <span th:text="${companyPhone}"></span>
-            </p>
-
-            <p>
-                <strong>Email :</strong>
-                <span th:text="${companyEmail}"></span>
-            </p>
-
-            <p>
-                <strong>GSTIN :</strong>
-                <span th:text="${companyGst}"></span>
-            </p>
-
+            <p><span class="label">Phone:</span> <span th:text="${companyPhone}"></span></p>
+            <p><span class="label">Email:</span> <span th:text="${companyEmail}"></span></p>
+            <p><span class="label">GSTIN:</span> <span th:text="${companyGst}"></span></p>
         </td>
-
     </tr>
-
 </table>
 
-<!-- =======================================================
-     INVOICE + CUSTOMER
-======================================================= -->
+<div class="doc-title">TAX INVOICE</div>
 
+<!-- Invoice details + bill to -->
 <table class="info-table">
-
     <tr>
-
-        <td class="info-box">
-
-            <div class="box-header">
-                Invoice Details
+        <td class="info-cell">
+            <div class="info-box">
+                <div class="box-header">Invoice Details</div>
+                <div class="box-body">
+                    <p><span class="label">Invoice No:</span> <span th:text="${invoiceNumber}"></span></p>
+                    <p><span class="label">Invoice Date:</span> <span th:text="${invoiceDate}"></span></p>
+                    <p th:if="${poNumber != null and !#strings.isEmpty(poNumber)}">
+                        <span class="label">PO Number:</span> <span th:text="${poNumber}"></span>
+                    </p>
+                </div>
             </div>
-
-            <div class="box-body">
-
-                <p>
-                    <span class="label">Invoice No :</span>
-                    <span th:text="${invoiceNumber}"></span>
-                </p>
-
-                <p>
-                    <span class="label">Invoice Date :</span>
-                    <span th:text="${invoiceDate}"></span>
-                </p>
-
-                <p>
-                    <span class="label">PO Number :</span>
-                    <span th:text="${poNumber}"></span>
-                </p>
-
-            </div>
-
         </td>
-
-        <td style="width:4%;border:none;"></td>
-
-        <td class="info-box">
-
-            <div class="box-header">
-                Bill To
+        <td class="info-spacer"></td>
+        <td class="info-cell">
+            <div class="info-box">
+                <div class="box-header">Bill To</div>
+                <div class="box-body">
+                    <p><strong th:text="${customerName}"></strong></p>
+                    <p th:text="${customerAddress}"></p>
+                    <p><span class="label">Phone:</span> <span th:text="${customerPhone}"></span></p>
+                    <p><span class="label">Email:</span> <span th:text="${customerEmail}"></span></p>
+                    <p><span class="label">GSTIN:</span> <span th:text="${customerGst}"></span></p>
+                </div>
             </div>
-
-            <div class="box-body">
-
-                <p>
-                    <strong th:text="${customerName}"></strong>
-                </p>
-
-                <p th:text="${customerAddress}"></p>
-
-                <p>
-                    <span class="label">Phone :</span>
-                    <span th:text="${customerPhone}"></span>
-                </p>
-
-                <p>
-                    <span class="label">Email :</span>
-                    <span th:text="${customerEmail}"></span>
-                </p>
-
-                <p>
-                    <span class="label">GSTIN :</span>
-                    <span th:text="${customerGst}"></span>
-                </p>
-
-            </div>
-
         </td>
-
     </tr>
-
 </table>
-<!-- =======================================================
-     ITEMS TABLE
-======================================================= -->
 
+<!-- Line items -->
 <table class="items-table">
-
     <thead>
-
     <tr>
-
-        <th class="serial">#</th>
-
-        <th class="product">Product</th>
-
-        <th class="hsn">HSN</th>
-
-        <th class="qty">Qty</th>
-
-        <th class="rate">Unit Price</th>
-
-        <th class="amount">Amount</th>
-
+        <th class="col-serial">#</th>
+        <th class="col-product" style="text-align:left;">Product</th>
+        <th class="col-hsn">HSN</th>
+        <th class="col-qty">Qty</th>
+        <th class="col-rate">Unit Price (Rs.)</th>
+        <th class="col-amount">Amount (Rs.)</th>
     </tr>
-
     </thead>
-
     <tbody>
-
     <tr th:each="item : ${items}">
-
-        <td class="serial"
-            th:text="${item.serialNumber}">
-            1
-        </td>
-
-        <td class="product"
-            th:text="${item.productName}">
-            Product Name
-        </td>
-
-        <td class="hsn"
-            th:text="${item.hsnCode}">
-            0000
-        </td>
-
-        <td class="qty"
-            th:text="${item.quantity}">
-            1
-        </td>
-
-        <td class="rate text-right"
-            th:text="${item.unitPrice}">
-            100.00
-        </td>
-
-        <td class="amount text-right"
-            th:text="${item.totalPrice}">
-            100.00
-        </td>
-
+        <td class="col-serial" th:text="${item.serialNumber}">1</td>
+        <td class="col-product" th:text="${item.productName}">Product Name</td>
+        <td class="col-hsn" th:text="${item.hsnCode}">0000</td>
+        <td class="col-qty" th:text="${item.quantity}">1</td>
+        <td class="col-rate" th:text="${#numbers.formatDecimal(item.unitPrice,1,'COMMA',2,'POINT')}">100.00</td>
+        <td class="col-amount" th:text="${#numbers.formatDecimal(item.totalPrice,1,'COMMA',2,'POINT')}">100.00</td>
     </tr>
-
     </tbody>
-
 </table>
-<!-- =======================================================
-     SUMMARY (BANK DETAILS + TOTALS)
-======================================================= -->
 
-
-
+<!-- Bank details + totals -->
 <table class="summary-table">
-
     <tr>
-
         <td class="summary-left">
-
-            <div class="section-heading">
-                Bank Details
-            </div>
-
+            <div class="section-heading">Bank Details</div>
             <table class="bank-table">
-
                 <tr>
                     <td class="bank-label">Bank Name</td>
                     <td th:text="${bankName}"></td>
                 </tr>
-
                 <tr>
                     <td class="bank-label">Account Number</td>
                     <td th:text="${accountNumber}"></td>
                 </tr>
-
                 <tr>
                     <td class="bank-label">IFSC Code</td>
                     <td th:text="${ifsc}"></td>
                 </tr>
-
             </table>
 
-            <div
-                    class="remarks"
-                    th:if="${remarks != null and !#strings.isEmpty(remarks)}">
-
-                <div class="section-heading">
-                    Remarks
-                </div>
-
-                <p th:text="${remarks}">
-                    Thank you for your business.
-                </p>
-
+            <div class="remarks" th:if="${remarks != null and !#strings.isEmpty(remarks)}">
+                <div class="section-heading">Remarks</div>
+                <p th:text="${remarks}">Thank you for your business.</p>
             </div>
-
         </td>
-
         <td class="summary-right">
-
             <table class="totals-table">
-
                 <tr>
                     <td>Subtotal</td>
                     <td class="text-right"
-                        th:text="${'Rs.' + #numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}">
-                    </td>
+                        th:text="${'Rs. ' + #numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}"></td>
                 </tr>
-
                 <tr>
-                    <td>
-                        CGST
-                        (<span th:text="${cgstPercentage}"></span>%)
-                    </td>
-
+                    <td>CGST (<span th:text="${cgstPercentage}"></span>%)</td>
                     <td class="text-right"
-                        th:text="${'Rs.' + #numbers.formatDecimal(cgst,1,'COMMA',2,'POINT')}">
-                    </td>
+                        th:text="${'Rs. ' + #numbers.formatDecimal(cgst,1,'COMMA',2,'POINT')}"></td>
                 </tr>
-
                 <tr>
-                    <td>
-                        SGST
-                        (<span th:text="${sgstPercentage}"></span>%)
-                    </td>
-
+                    <td>SGST (<span th:text="${sgstPercentage}"></span>%)</td>
                     <td class="text-right"
-                        th:text="${'Rs.' + #numbers.formatDecimal(sgst,1,'COMMA',2,'POINT')}">
-                    </td>
+                        th:text="${'Rs. ' + #numbers.formatDecimal(sgst,1,'COMMA',2,'POINT')}"></td>
                 </tr>
-
                 <tr>
                     <td>Discount</td>
-
                     <td class="text-right"
-                        th:text="${'Rs.' + #numbers.formatDecimal(discount,1,'COMMA',2,'POINT')}">
-                    </td>
+                        th:text="${'Rs. ' + #numbers.formatDecimal(discount,1,'COMMA',2,'POINT')}"></td>
                 </tr>
-
                 <tr class="grand-total">
-
                     <td>Grand Total</td>
-
                     <td class="text-right"
-                        th:text="${'Rs.' + #numbers.formatDecimal(grandTotal,1,'COMMA',2,'POINT')}">
-                    </td>
-
+                        th:text="${'Rs. ' + #numbers.formatDecimal(grandTotal,1,'COMMA',2,'POINT')}"></td>
                 </tr>
-
                 <tr class="amount-in-words">
-
                     <td colspan="2">
-
-                        <strong>Amount in Words</strong>
-
-                        <br/><br/>
-
-                        <span th:text="${grandTotalWords}">
-                        </span>
-
+                        <strong>Amount in Words:</strong><br/>
+                        <span th:text="${grandTotalWords}"></span>
                     </td>
-
                 </tr>
-
             </table>
-
         </td>
-
     </tr>
-
 </table>
-                    <!-- =======================================================
-                         SIGNATURE
-                    ======================================================= -->
 
-                    <table class="signature">
+<!-- Signature -->
+<table class="signature">
+    <tr>
+        <td><strong>Thank you for your business!</strong></td>
+        <td class="signature-box">
+            <div class="signature-line">Authorized Signature</div>
+        </td>
+    </tr>
+</table>
 
-                        <tr>
+<div class="footer">
+    This is a computer-generated invoice and does not require a physical signature.
+</div>
 
-                            <td>
-
-                                <strong>
-                                    Thank you for your business!
-                                </strong>
-
-                            </td>
-
-                            <td class="signature-box">
-
-                                <div class="signature-line">
-                                    Authorized Signature
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                    </table>
-
-                    <!-- =======================================================
-                         FOOTER
-                    ======================================================= -->
-
-                    <div class="footer">
-
-                        This is a computer-generated invoice and does not require a physical signature.
-
-                    </div>
 </body>
 </html>

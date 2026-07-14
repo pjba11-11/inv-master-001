@@ -13,4 +13,10 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Invoice> findByCompanyIdAndDeletedAtIsNullOrderByInvoiceDateDesc(Long companyId);
 
     Optional<Invoice> findByIdAndCompanyIdAndDeletedAtIsNull(Long id, Long companyId);
+
+    Optional<Invoice> findById(Long id);
+
+    List<Invoice> findByCompanyIdAndDeletedAtIsNull(
+            Long companyId
+    );
 }
