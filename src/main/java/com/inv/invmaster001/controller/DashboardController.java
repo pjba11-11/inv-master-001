@@ -43,7 +43,9 @@ public class DashboardController {
                 dashboardService.getDashboard(currentUser.getUser());
 
         DashboardAIResponse response =
-                dashboardAIService.generateInsights(dashboard);
+                dashboardAIService.generateInsights(
+                        dashboard,
+                        currentUser.getUser().getCompany());
 
         return ResponseEntity.ok(response);
     }

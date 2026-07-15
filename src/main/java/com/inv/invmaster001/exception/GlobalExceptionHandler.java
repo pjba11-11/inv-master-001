@@ -1,5 +1,6 @@
 package com.inv.invmaster001.exception;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -39,6 +40,27 @@ public class GlobalExceptionHandler {
                 request.getDescription(false)
         );
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handle RateLimitExceededException globally.
+     * Returns 429 with a Retry-After header indicating when the caller
+     * may retry the throttled operation.
+     *
+     * @param ex      the exception
+     * @param request the current request
+     * @return ResponseEntity with error details
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorDetails> handleRateLimitExceededException(RateLimitExceededException ex, org.springframework.web.context.request.WebRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                new Date(),
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .body(errorDetails);
     }
 
     /**
