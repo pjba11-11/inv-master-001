@@ -64,6 +64,56 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle resource-not-found exceptions globally.
+     * Covers the generic {@link ResourceNotFoundException} as well as the
+     * domain-specific not-found exceptions. Returns 404 (Not Found).
+     *
+     * @param ex      the exception
+     * @param request the current request
+     * @return ResponseEntity with error details
+     */
+    @ExceptionHandler({
+            ResourceNotFoundException.class,
+            CompanyNotFoundException.class,
+            ProductNotFoundException.class,
+            SettingsNotFoundException.class
+    })
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ErrorDetails> handleResourceNotFoundException(RuntimeException ex, org.springframework.web.context.request.WebRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                new Date(),
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Handle resource-conflict exceptions globally.
+     * Covers the generic {@link ResourceConflictException} as well as the
+     * domain-specific already-exists exceptions. Returns 409 (Conflict).
+     *
+     * @param ex      the exception
+     * @param request the current request
+     * @return ResponseEntity with error details
+     */
+    @ExceptionHandler({
+            ResourceConflictException.class,
+            CompanyAlreadyExistsException.class,
+            EmailAlreadyExistsException.class,
+            SettingsAlreadyExistsException.class
+    })
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<ErrorDetails> handleResourceConflictException(RuntimeException ex, org.springframework.web.context.request.WebRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                new Date(),
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+    }
+
+    /**
      * Handle RuntimeException globally.
      *
      * @param ex      the exception
