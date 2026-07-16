@@ -5,6 +5,9 @@ import com.inv.invmaster001.dto.request.RegisterUserRequest;
 import com.inv.invmaster001.dto.response.RegisterCommonResponse;
 import com.inv.invmaster001.entity.Company;
 import com.inv.invmaster001.entity.User;
+import com.inv.invmaster001.exception.CompanyAlreadyExistsException;
+import com.inv.invmaster001.exception.CompanyNotFoundException;
+import com.inv.invmaster001.exception.EmailAlreadyExistsException;
 import com.inv.invmaster001.repository.CompanyRepository;
 import com.inv.invmaster001.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +26,11 @@ public class AuthService {
     public RegisterCommonResponse registerUser(RegisterUserRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new EmailAlreadyExistsException("Email already exists");
         }
 
         Company company = companyRepository.findById(request.getCompanyId())
-                .orElseThrow(() -> new RuntimeException("Company not found"));
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found"));
 
         User user = User.builder()
                 .name(request.getName())
@@ -49,7 +52,7 @@ public class AuthService {
     public RegisterCommonResponse registerCompany(RegisterCompanyRequest request) {
 
         if (companyRepository.existsByCompanyName(request.getCompanyName())) {
-            throw new RuntimeException("Company already exists");
+            throw new CompanyAlreadyExistsException("Company already exists");
         }
 
         Company company = Company.builder()

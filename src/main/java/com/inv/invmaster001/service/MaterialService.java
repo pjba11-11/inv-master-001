@@ -6,6 +6,7 @@ import com.inv.invmaster001.dto.response.material.MaterialResponse;
 import com.inv.invmaster001.entity.Company;
 import com.inv.invmaster001.entity.Material;
 import com.inv.invmaster001.entity.User;
+import com.inv.invmaster001.exception.ResourceNotFoundException;
 import com.inv.invmaster001.repository.MaterialRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class MaterialService {
     public MaterialResponse getById(Long id, Long companyId) {
         Material m = materialRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(id, companyId)
-                .orElseThrow(() -> new RuntimeException("Material not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
         return toResponse(m);
     }
 
@@ -56,7 +57,7 @@ public class MaterialService {
     public MaterialResponse update(Long id, UpdateMaterialRequest request, Long companyId) {
         Material material = materialRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(id, companyId)
-                .orElseThrow(() -> new RuntimeException("Material not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
 
         if (request.getMaterialName() != null) material.setMaterialName(request.getMaterialName());
         if (request.getUnit() != null) material.setUnit(request.getUnit());
@@ -70,7 +71,7 @@ public class MaterialService {
     public void delete(Long id, Long companyId) {
         Material material = materialRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(id, companyId)
-                .orElseThrow(() -> new RuntimeException("Material not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Material not found"));
         material.setDeletedAt(LocalDateTime.now());
         materialRepository.save(material);
     }

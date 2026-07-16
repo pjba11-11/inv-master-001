@@ -11,6 +11,8 @@ import com.inv.invmaster001.entity.Product;
 import com.inv.invmaster001.entity.ProductPriceHistory;
 import com.inv.invmaster001.entity.User;
 import com.inv.invmaster001.exception.ProductNotFoundException;
+import com.inv.invmaster001.exception.ResourceConflictException;
+import com.inv.invmaster001.exception.ResourceNotFoundException;
 import com.inv.invmaster001.repository.MaterialRepository;
 import com.inv.invmaster001.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,12 +53,12 @@ public class ProductService {
         Long companyId = company.getId();
 
         if (productRepository.existsByCompanyIdAndProductNameIgnoreCaseAndDeletedAtIsNull(companyId, request.getProductName())) {
-            throw new RuntimeException("Product already exists");
+            throw new ResourceConflictException("Product already exists");
         }
 
         List<Material> materials = materialRepository.findAllById(request.getMaterialIds());
         if (materials.size() != request.getMaterialIds().size()) {
-            throw new RuntimeException("One or more materials not found");
+            throw new ResourceNotFoundException("One or more materials not found");
         }
 
         Product product = new Product();
@@ -83,12 +85,12 @@ public class ProductService {
                 .orElseThrow(() -> new ProductNotFoundException("Product not found"));
 
         if (productRepository.existsByCompanyIdAndProductNameIgnoreCaseAndDeletedAtIsNullAndIdNot(companyId, request.getProductName(), productId)) {
-            throw new RuntimeException("Product already exists");
+            throw new ResourceConflictException("Product already exists");
         }
 
         List<Material> materials = materialRepository.findAllById(request.getMaterialIds());
         if (materials.size() != request.getMaterialIds().size()) {
-            throw new RuntimeException("One or more materials not found");
+            throw new ResourceNotFoundException("One or more materials not found");
         }
 
         product.setProductName(request.getProductName());

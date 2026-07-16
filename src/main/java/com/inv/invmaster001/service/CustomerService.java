@@ -8,8 +8,10 @@ import com.inv.invmaster001.dto.response.customer.CustomerResponse;
 import com.inv.invmaster001.entity.Company;
 import com.inv.invmaster001.entity.Customer;
 import com.inv.invmaster001.entity.User;
+import com.inv.invmaster001.exception.ResourceNotFoundException;
 import com.inv.invmaster001.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,7 +105,7 @@ public class CustomerService {
     public CustomerFullResponse getCustomerById(Long customerId, Long companyId) {
         Customer customer = customerRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(customerId, companyId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
         return mapToFullResponse(customer);
     }
 
@@ -114,7 +116,7 @@ public class CustomerService {
     public void deleteCustomer(Long customerId, Long companyId) {
         Customer customer = customerRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(customerId, companyId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
         customer.setDeletedAt(java.time.LocalDateTime.now());
         customerRepository.save(customer);
     }
@@ -154,7 +156,7 @@ public class CustomerService {
                 customerRepository.findById(customerId)
 
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new ResourceNotFoundException(
                                         "Customer not found"
                                 ));
 
@@ -165,7 +167,7 @@ public class CustomerService {
                 .equals(companyId)) {
 
 
-            throw new RuntimeException(
+            throw new AccessDeniedException(
                     "You cannot access this customer"
             );
 
