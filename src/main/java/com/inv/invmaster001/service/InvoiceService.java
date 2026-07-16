@@ -20,6 +20,7 @@ import com.inv.invmaster001.entity.ProductPriceHistory;
 import com.inv.invmaster001.entity.Settings;
 import com.inv.invmaster001.entity.User;
 import com.inv.invmaster001.exception.ProductNotFoundException;
+import com.inv.invmaster001.exception.ResourceNotFoundException;
 import com.inv.invmaster001.repository.CustomerRepository;
 import com.inv.invmaster001.repository.InvoiceRepository;
 import com.inv.invmaster001.repository.InvoiceSequenceRepository;
@@ -31,6 +32,7 @@ import com.inv.invmaster001.repository.UserRepository;
 import com.inv.invmaster001.service.document.InvoiceDocumentService;
 import com.inv.invmaster001.util.NumberToWordsUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,7 +82,7 @@ public class InvoiceService {
         // =====================================================
 
         if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new RuntimeException("Invoice must contain at least one item");
+            throw new IllegalArgumentException("Invoice must contain at least one item");
         }
 
         // =====================================================
@@ -94,7 +96,7 @@ public class InvoiceService {
                                 company.getId()
                         )
                         .orElseThrow(() ->
-                                new RuntimeException("Customer not found"));
+                                new ResourceNotFoundException("Customer not found"));
 
         // =====================================================
         // SETTINGS
@@ -153,7 +155,7 @@ public class InvoiceService {
                                     product.getId()
                             )
                             .orElseThrow(() ->
-                                    new RuntimeException(
+                                    new ResourceNotFoundException(
                                             "Product price not found"
                                     ));
 
@@ -437,7 +439,7 @@ public class InvoiceService {
 
         Invoice invoice = invoiceRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
         List<InvoiceLineItemResponse> items = invoice.getInvoiceLineItems()
                 .stream()
@@ -476,7 +478,7 @@ public class InvoiceService {
 
         Invoice invoice = invoiceRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
         if (request.getStatus() != null) invoice.setStatus(request.getStatus());
         if (request.getRemarks() != null) invoice.setRemarks(request.getRemarks());
@@ -495,7 +497,7 @@ public class InvoiceService {
 
         invoiceRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
         return paymentRepository.findByInvoiceId(invoiceId)
                 .stream()
@@ -520,7 +522,7 @@ public class InvoiceService {
 
         Invoice invoice = invoiceRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
         Payment payment = Payment.builder()
                 .invoice(invoice)
@@ -568,7 +570,7 @@ public class InvoiceService {
 
         Invoice invoice = invoiceRepository
                 .findByIdAndCompanyIdAndDeletedAtIsNull(invoiceId, companyId)
-                .orElseThrow(() -> new RuntimeException("Invoice not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
         return invoice.getInvoiceLineItems()
                 .stream()
@@ -589,7 +591,7 @@ public class InvoiceService {
             Long userId) {
 
         User currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Company company = currentUser.getCompany();
 
@@ -598,10 +600,10 @@ public class InvoiceService {
                 invoiceRepository
                         .findById(invoiceId)
                         .orElseThrow(() ->
-                                new RuntimeException("Invoice not found"));
+                                new ResourceNotFoundException("Invoice not found"));
 
         if (!invoice.getCompany().getId().equals(company.getId())) {
-            throw new RuntimeException("Invoice does not belong to your company");
+            throw new AccessDeniedException("Invoice does not belong to your company");
         }
 
         Customer customer =
@@ -611,7 +613,7 @@ public class InvoiceService {
                                 company.getId()
                         )
                         .orElseThrow(() ->
-                                new RuntimeException("Customer not found"));
+                                new ResourceNotFoundException("Customer not found"));
 
         byte[ ] pdf= invoiceDocumentService.generatePdf(
                 invoice,

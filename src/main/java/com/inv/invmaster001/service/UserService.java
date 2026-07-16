@@ -3,6 +3,8 @@ package com.inv.invmaster001.service;
 import com.inv.invmaster001.dto.request.CreateUserAdminRequest;
 import com.inv.invmaster001.dto.response.UserResponse;
 import com.inv.invmaster001.entity.User;
+import com.inv.invmaster001.exception.EmailAlreadyExistsException;
+import com.inv.invmaster001.exception.ResourceNotFoundException;
 import com.inv.invmaster001.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,7 +38,7 @@ public class UserService {
 
     public UserResponse createUser(CreateUserAdminRequest request, User adminUser) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new EmailAlreadyExistsException("Email already in use");
         }
 
         // adminUser comes from the security context (loaded in the auth
@@ -44,7 +46,7 @@ public class UserService {
         // reaches this transaction, so its lazy `company` association can't
         // be initialized here. Re-fetch a managed instance in this session.
         User managedAdmin = userRepository.findById(adminUser.getId())
-                .orElseThrow(() -> new RuntimeException("Admin user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Admin user not found"));
 
         User user = User.builder()
                 .name(request.getName())

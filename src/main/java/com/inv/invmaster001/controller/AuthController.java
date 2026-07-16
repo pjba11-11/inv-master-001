@@ -57,7 +57,7 @@ public class AuthController {
     public LoginResponse refresh(@RequestBody RefreshRequest request) {
 
         if (!jwtService.isValid(request.refreshToken)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new IllegalArgumentException("Invalid refresh token");
         }
 
         String username = jwtService.extractUsername(request.refreshToken);
